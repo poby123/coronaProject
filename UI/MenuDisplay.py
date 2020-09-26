@@ -17,10 +17,10 @@ class Ui_MenuWindow(object):
         self.MenuEventHandler = MenuEventHandler
 
     def handleUserClickEvent(self):
-        self.MenuEventHandler('user')
+        self.MenuEventHandler('userMenu')
 
     def handleAdminClickEvent(self):
-        self.MenuEventHandler('admin')
+        self.MenuEventHandler('adminMenu')
 
     def setupUi(self, MenuWindow):
         MenuWindow.setObjectName("MenuWindow")

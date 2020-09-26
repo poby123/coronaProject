@@ -11,11 +11,20 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_WelcomeWindow(object):
-    def setupUi(self, WelcomeWindow):
-        WelcomeWindow.setObjectName("WelcomeWindow")
-        WelcomeWindow.resize(780, 390)
-        self.centralwidget = QtWidgets.QWidget(WelcomeWindow)
+class Ui_MsgWindow(object):
+
+    def __init__(self, msg, MenuEventHandler):
+        self.msg = msg
+        self.MenuEventHandler = MenuEventHandler
+
+    def handleBackClickEvent(self):
+        print('뒤로가기 눌림 in MsgDisplay')
+        self.MenuEventHandler('backward')
+
+    def setupUi(self, MsgWindow):
+        MsgWindow.setObjectName("MsgWindow")
+        MsgWindow.resize(780, 390)
+        self.centralwidget = QtWidgets.QWidget(MsgWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(60, 50, 661, 251))
@@ -31,19 +40,24 @@ class Ui_WelcomeWindow(object):
         self.label.setFont(font)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
-        WelcomeWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(WelcomeWindow)
+        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton.clicked.connect(self.handleBackClickEvent)
+        self.pushButton.setGeometry(QtCore.QRect(0, 0, 93, 28))
+        self.pushButton.setObjectName("pushButton")
+        MsgWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MsgWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 780, 26))
         self.menubar.setObjectName("menubar")
-        WelcomeWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(WelcomeWindow)
+        MsgWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MsgWindow)
         self.statusbar.setObjectName("statusbar")
-        WelcomeWindow.setStatusBar(self.statusbar)
+        MsgWindow.setStatusBar(self.statusbar)
 
-        self.retranslateUi(WelcomeWindow)
-        QtCore.QMetaObject.connectSlotsByName(WelcomeWindow)
+        self.retranslateUi(MsgWindow)
+        QtCore.QMetaObject.connectSlotsByName(MsgWindow)
 
-    def retranslateUi(self, WelcomeWindow):
+    def retranslateUi(self, MsgWindow):
         _translate = QtCore.QCoreApplication.translate
-        WelcomeWindow.setWindowTitle(_translate("WelcomeWindow", "Welcome!"))
-        self.label.setText(_translate("WelcomeWindow", "손목을 센서에 가까이 대주세요!"))
+        # MsgWindow.setWindowTitle(_translate("MsgWindow", "Welcome!"))
+        self.label.setText(_translate("MsgWindow", self.msg))
+        self.pushButton.setText(_translate("WelcomeWindow", "뒤로가기"))
