@@ -18,7 +18,6 @@ class Ui_MsgWindow(object):
         self.MenuEventHandler = MenuEventHandler
 
     def handleBackClickEvent(self):
-        print('뒤로가기 눌림 in MsgDisplay')
         self.MenuEventHandler('backward')
 
     def setupUi(self, MsgWindow):
