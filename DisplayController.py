@@ -14,6 +14,7 @@ class DisplayController():
         #windows dictionary
         self.windows = {}
         self.windowsStack = ['menuWindow']
+        self.interuppt = False
 
         #DTO
         self.dto = {"uid":0, "name":None, "temp":0}
@@ -43,10 +44,7 @@ class DisplayController():
         self.windows['tempInfoWindow'] = {"window":TempInfoWindow, "ui":TempInfoWindowUI}
 
     def __del__(self):
-        if(self.NFCThread != None):
-            self.NFCThread.join()
-        if(self.tempThread != None):
-            self.tempThread.join()
+        pass
 
     def selectWindow(self, new):
             before = self.windowsStack[-1]
@@ -58,8 +56,8 @@ class DisplayController():
         print(arg)
         if(arg == 'userMenu'):
             self.NFCThread = RasberryController.RasberryController(self.dto, self.NFCThreadEvent, 'NFC')
-            self.menuEventHandler('tempInfo')
             self.NFCThread.start()
+            self.menuEventHandler('tempInfo')
 
         elif(arg=='adminMenu'):
             pass
@@ -69,22 +67,42 @@ class DisplayController():
             self.tempThread.start()
             
         elif(arg=='backwardAtUserMenu'):
+            self.interuppt = True
+            print(self.NFCThread.is_alive())
+            print(self.tempThread.is_alive())
+            if(self.NFCThread.is_alive()):
+                self.NFCThread.stop()
+                self.NFCThread.join()
+                # del self.NFCThread
+            if(self.tempThread.is_alive()):
+                self.tempThread.stop()
+                self.tempThread.join()
+                # del self.tempThread
             self.selectWindow('menuWindow')
+            self.init()
+            
             
     def NFCThreadEvent(self):
+        if(self.interuppt == True):
+            return
         if(self.dto['name'] != None):
             self.windows['tempInfoWindow']["ui"].setName(self.dto['name'])
             self.windows['tempInfoWindow']["ui"].setStatus('체온측정 중입니다.')
 
     def TempThreadEvent(self):
-        # self.NFCThread.join()
+        if(self.interuppt == True):
+            return
+        self.NFCThread.join()
         if(self.dto['name'] == None):
             self.dto['temp'] = '등록되어 있지 않은 NFC카드입니다'
+        print(self.dto)
         self.windows['tempInfoWindow']["ui"].setStatus(self.dto['temp'])
         time.sleep(1.5)
         for i in range(0,4):
             time.sleep(1)
             self.windows['tempInfoWindow']["ui"].setStatus(f"{3-i} 초후에 돌아갑니다")
+        if(self.interuppt == True):
+            return
         self.backToUserMenu()
 
     def initDTO(self):
@@ -92,11 +110,17 @@ class DisplayController():
         self.dto['name'] = None
         self.dto['temp'] = 0
 
-    def backToUserMenu(self):
-        #init
+    def init(self):
         self.windows['tempInfoWindow']['ui'].setName('확인 중... NFC카드를 대주세요')
         self.windows['tempInfoWindow']['ui'].setStatus('')
         self.initDTO()
+        self.tempThread.reset()
+        self.NFCThread.reset()
+        self.interuppt = False
+
+    def backToUserMenu(self):
+        #init
+        self.init()
         self.menuEventHandler('userMenu')
 
 
