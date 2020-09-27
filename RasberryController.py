@@ -10,6 +10,7 @@ class RasberryController(threading.Thread):
         self.category = category
         self.dto = dto
         self.threadEvent = threadEvent
+        self.setDaemon(True)
 
     def __del__(self):
         print('---end----')
@@ -21,7 +22,6 @@ class RasberryController(threading.Thread):
             self.getTemp()
         if(self.threadEvent != None):
             self.threadEvent()
-        
 
     def setCategory(self, category):
         self.category = category
@@ -29,7 +29,7 @@ class RasberryController(threading.Thread):
     def getNFC(self):
         time.sleep(1)
         self.dto['uid'] = 12345678
-        self.dto['name'] = '홍길동'
+        self.dto['name'] = self.dataController.getNameByNFC(self.dto['uid'])
 
     def getTemp(self):
         time.sleep(3)
