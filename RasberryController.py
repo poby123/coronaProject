@@ -1,13 +1,15 @@
 import time
+import threading
 from PyQt5 import QtCore
 
 import DataController
-class RasberryController(QtCore.QThread):
-    def __init__(self, threadEndEvent, category, parent=None):
-        super(RasberryController, self).__init__(parent)
-        self.threadEndEvent = threadEndEvent #props from DisplayController
+class RasberryController(threading.Thread):
+    def __init__(self, dto, threadEvent=None, category=None):
+        threading.Thread.__init__(self)
         self.dataController = DataController.DataController()
-        self.category = category #mean which sensor use
+        self.category = category
+        self.dto = dto
+        self.threadEvent = threadEvent
 
     def __del__(self):
         print('---end----')
@@ -15,13 +17,20 @@ class RasberryController(QtCore.QThread):
     def run(self):
         if(self.category == 'NFC'):
             self.getNFC()
+        elif(self.category == 'temp'):
+            self.getTemp()
+        if(self.threadEvent != None):
+            self.threadEvent()
+        
+
+    def setCategory(self, category):
+        self.category = category
 
     def getNFC(self):
-        time.sleep(3)
-        uid = 12345678
-        name = self.dataController.getNameByNFC(uid)
-        self.threadEndEvent(self.category, uid, name)
+        time.sleep(1)
+        self.dto['uid'] = 12345678
+        self.dto['name'] = '홍길동'
 
     def getTemp(self):
         time.sleep(3)
-        # self.uid[0] = 12345678
+        self.dto['temp'] = 36.5

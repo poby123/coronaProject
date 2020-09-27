@@ -10,7 +10,6 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class Ui_MsgWindow(object):
 
     def __init__(self, msg, MenuEventHandler):

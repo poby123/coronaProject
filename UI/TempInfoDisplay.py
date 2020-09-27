@@ -12,9 +12,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_TempInfoWindow(object):
-    def __init__(self, minTemp, maxTemp):
-        self.minTempPivot = minTemp
+    def __init__(self, maxTemp, MenuEventHandler):
         self.maxTempPivot = maxTemp
+        self.MenuEventHandler = MenuEventHandler
+
+    def handleBackClickEvent(self):
+        self.MenuEventHandler('backward')
 
     def setupUi(self, TempInfoWindow):
         TempInfoWindow.setObjectName("TempInfoWindow")
@@ -30,6 +33,11 @@ class Ui_TempInfoWindow(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton.clicked.connect(self.handleBackClickEvent)
+        self.pushButton.setGeometry(QtCore.QRect(0, 0, 93, 28))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton.clicked.connect(self.handleBackClickEvent)
         self.nameLabel = QtWidgets.QLabel(self.verticalLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("굴림")
@@ -71,6 +79,7 @@ class Ui_TempInfoWindow(object):
         _translate = QtCore.QCoreApplication.translate
         TempInfoWindow.setWindowTitle(_translate("TempInfoWindow", "MainWindow"))
         self.nameLabel.setText(_translate("TempInfoWindow", "이름 : "))
+        self.pushButton.setText(_translate("WelcomeWindow", "뒤로가기"))
     
     def setName(self, nameValue):
         # self.nameValueLabel.setText(_translate("TempInfoWindow", nameValue))
