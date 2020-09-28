@@ -1,51 +1,33 @@
 import time
 import threading
 from PyQt5 import QtCore
-
+from multiprocessing import Queue
 import DataController
-class RasberryController(threading.Thread, threading.Event):
-    def __init__(self, dto, threadEvent=None, category=None):
-        threading.Thread.__init__(self, daemon=True)
-        self.dataController = DataController.DataController()
-        self.category = category
-        self.dto = dto
-        self.threadEvent = threadEvent
-        self.interrupt = False
 
-    def __del__(self):
-        print('---end----')
+def getNFC():
+    # dataController = DataController()
+    # for i in range(1, 10000000):
+    #     pass
+    time.sleep(2)
+    dto = {}
+    dto['type'] = 'NFC'
+    dto['uid'] = 12345678
+    dto['name'] = DataController.getNameByNFC(dto['uid'])
+    dto['temp'] = None
+    return dto
 
-    def run(self):
-        if(self.interrupt):
-            return
-        elif(self.category == 'NFC'):
-            self.getNFC()
-        elif(self.category == 'temp'):
-            self.getTemp()
-        if(self.threadEvent != None):
-            self.threadEvent()
+def getTemp():
+    for i in range(1, 100000000):
+        pass
+    dto = {}
+    dto['type'] = 'TEMP'
+    dto['uid'] = None
+    dto['name'] = None
+    dto['temp'] = 37.8
+    return dto
+    
 
-    def setCategory(self, category):
-        self.category = category
-
-    def reset(self):
-        self.interrupt = False
-
-    def stop(self):
-        self.interrupt = True
-
-
-    def getNFC(self):
-        for i in range(1, 10000000):
-            pass
-            if(self.interrupt):
-                return
-        self.dto['uid'] = 12345678
-        self.dto['name'] = self.dataController.getNameByNFC(self.dto['uid'])
-
-    def getTemp(self):
-        for i in range(1, 100000000):
-            pass
-            if(self.interrupt):
-                return
-        self.dto['temp'] = 37.8
+if __name__ == '__main__':
+    q = Queue()
+    getNFC(q)
+    print(q.get())

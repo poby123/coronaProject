@@ -59,3 +59,6 @@ class Ui_MsgWindow(object):
         # MsgWindow.setWindowTitle(_translate("MsgWindow", "Welcome!"))
         self.label.setText(_translate("MsgWindow", self.msg))
         self.pushButton.setText(_translate("WelcomeWindow", "뒤로가기"))
+
+    def setMsg(self, msg):
+        self.label.setText(msg)
