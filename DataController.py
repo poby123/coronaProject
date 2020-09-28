@@ -3,7 +3,7 @@ import time
 
 class DataController():
     def __init__(self):
-        self.url = ''
+        self.URL = 'http://localhost:3000/rest'
 
     def getNameByNFC(self, uid):
         if(uid == 12345678):

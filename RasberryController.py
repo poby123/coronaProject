@@ -34,8 +34,9 @@ class RasberryController(threading.Thread, threading.Event):
     def stop(self):
         self.interrupt = True
 
+
     def getNFC(self):
-        for i in range(1, 10000):
+        for i in range(1, 10000000):
             pass
             if(self.interrupt):
                 return
@@ -43,8 +44,8 @@ class RasberryController(threading.Thread, threading.Event):
         self.dto['name'] = self.dataController.getNameByNFC(self.dto['uid'])
 
     def getTemp(self):
-        for i in range(1, 10000):
+        for i in range(1, 100000000):
             pass
             if(self.interrupt):
                 return
-        self.dto['temp'] = 36.5
+        self.dto['temp'] = 37.8
