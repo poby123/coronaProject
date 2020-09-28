@@ -38,10 +38,10 @@ class Ui_MsgWindow(object):
         self.label.setFont(font)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.clicked.connect(self.handleBackClickEvent)
-        self.pushButton.setGeometry(QtCore.QRect(0, 0, 93, 28))
-        self.pushButton.setObjectName("pushButton")
+        # self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        # self.pushButton.clicked.connect(self.handleBackClickEvent)
+        # self.pushButton.setGeometry(QtCore.QRect(0, 0, 93, 28))
+        # self.pushButton.setObjectName("pushButton")
         MsgWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MsgWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 780, 26))
@@ -58,7 +58,7 @@ class Ui_MsgWindow(object):
         _translate = QtCore.QCoreApplication.translate
         # MsgWindow.setWindowTitle(_translate("MsgWindow", "Welcome!"))
         self.label.setText(_translate("MsgWindow", self.msg))
-        self.pushButton.setText(_translate("WelcomeWindow", "뒤로가기"))
+        # self.pushButton.setText(_translate("WelcomeWindow", "뒤로가기"))
 
     def setMsg(self, msg):
         self.label.setText(msg)
