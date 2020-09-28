@@ -15,7 +15,7 @@ from UI import MenuDisplay, TempInfoDisplay, MsgDisplay
 import RasberryController
 class DisplayController():
     #python constructor
-    def __init__(self, q, dto):
+    def __init__(self, requestQ, dto):
         # GUI program application
         self.app = QtWidgets.QApplication(sys.argv)
 
@@ -23,8 +23,8 @@ class DisplayController():
         self.windows = {}
         self.windowsStack = ['menuWindow']
 
-        #DTO, Q
-        self.q = q
+        #DTO, requestQ
+        self.requestQ = requestQ
         self.dto = dto
 
         #status
@@ -99,14 +99,15 @@ class DisplayController():
     #select window to show for window transistion
     def selectWindow(self, new):
         before = self.windowsStack[-1]
-        self.windows[before]['window'].hide()
+        if(new != before):
+            self.windows[before]['window'].hide()
         self.windowsStack.append(new)
         self.windows[new]['window'].show()
 
     #Handle events at windows
     def menuEventHandler(self, arg):
         #put request
-        self.q.put(arg)
+        self.requestQ.put(arg)
 
         if(arg == 'userMenu'):
             self.init()
@@ -132,17 +133,17 @@ class DisplayController():
         self.temp = ''
     
     def clear(self):
-        while(self.q.qsize() > 0):
-            self.q.get()
+        while(self.requestQ.qsize() > 0):
+            self.requestQ.get()
         while(self.dto.qsize() > 0):
             self.dto.get()
 
 
-def Handler(q, dto):
+def Handler(requestQ, dto):
     while(True):
         time.sleep(0.5)
-        if(q.qsize()>0):
-            item = q.get()
+        if(requestQ.qsize()>0):
+            item = requestQ.get()
             if(item == 'userMenu'):
                 dto.put(RasberryController.getNFC())
             elif(item == 'tempInfo'):
@@ -151,12 +152,12 @@ def Handler(q, dto):
 
 
 if __name__ == "__main__":
-    q = Queue()
+    requestQ = Queue()
     dto = Queue()
     
-    displayController = DisplayController(q, dto)
+    displayController = DisplayController(requestQ, dto)
     app = displayController.app
-    handler = Process(target=Handler, args=(q,dto), daemon=True)
+    handler = Process(target=Handler, args=(requestQ,dto), daemon=True)
     handler.start()
 
     sys.exit(app.exec())
