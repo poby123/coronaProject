@@ -8,7 +8,7 @@ def getNFC():
     # dataController = DataController()
     # for i in range(1, 10000000):
     #     pass
-    time.sleep(2)
+    time.sleep(3)
     dto = {}
     dto['type'] = 'NFC'
     dto['uid'] = 12345678
@@ -17,13 +17,12 @@ def getNFC():
     return dto
 
 def getTemp():
-    for i in range(1, 100000000):
-        pass
+    time.sleep(3)
     dto = {}
     dto['type'] = 'TEMP'
     dto['uid'] = None
     dto['name'] = None
-    dto['temp'] = 37.8
+    dto['temp'] = 37.4
     return dto
     
 

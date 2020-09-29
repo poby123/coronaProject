@@ -27,7 +27,15 @@ def addUser(nfcId, name):
     result = response.json()
     print(result)
 
+def getUserData():
+    response = requests.get(URL + '/userInfoWithoutTemp')
+    state = response.status_code
+    result = response.json()
+    print(result)
+    print(result['content'])
+
 if __name__ == '__main__':
     # addTempData('12345678', '36.4')
     # getNameByNFC('12345678')
     # addUser('12345678', '홍길동')
+    getUserData()

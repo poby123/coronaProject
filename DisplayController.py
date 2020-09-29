@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 # --- user defined module ---
 # import windows to be displayed
-from UI import MenuDisplay, TempInfoDisplay, MsgDisplay
+from UI import MenuDisplay, TempInfoDisplay, MsgDisplays, AdminDeleteDisplay
 
 # import Rasberry pi controller to communicate with rasberry pi board
 import RasberryController
@@ -115,6 +115,7 @@ class DisplayController():
 
         elif(arg=='adminMenu'):
             pass
+
         elif(arg=='tempInfo'):
             pass
             # self.selectWindow('tempInfoWindow')
