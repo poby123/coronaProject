@@ -19,12 +19,19 @@ def addTempData(nfcId, temp):
     result = response.json()
     print(result)
 
-def addUser(nfcId, name):
-    params = {'nfcId':nfcId, 'name':name}
+def addUser(nfcId, name, belong=None):
+    params = {'nfcId':nfcId, 'name':name, 'belong' : belong}
     response = requests.get(URL + '/addUser', params=params)
     state = response.status_code
     result = response.json()
-    print(result)
+    return result['result']
+
+def deleteUser(targets):
+    targets = ['0'] + targets #add any element to first index of list
+    data = {'target': targets}
+    response = requests.post(URL + '/deleteUser', data=data)
+    result = response.json()
+    return result['result']
 
 def getUserData():
     time.sleep(1)
@@ -38,6 +45,8 @@ def getUserData():
 
 if __name__ == '__main__':
     # addTempData('12345678', '36.4')
-    print(getNameByNFC('12345678'))
+    # print(getNameByNFC('12345678'))
     # addUser('12345678', '홍길동')
     # getUserData()
+    # deleteUser(['12039', '12308904', '1234'])
+    deleteUser(['12039'])

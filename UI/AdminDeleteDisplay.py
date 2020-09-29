@@ -25,23 +25,26 @@ class MyCheckBox(QtWidgets.QCheckBox):
 
 class Ui_MainWindow(object):
 
-    def __init__(self, data, cancelEvent):
+    def __init__(self, data, eventHandler):
         self.data = data
         self.checkBoxs = []
         self.targets = []
-        self.cancelEvent = cancelEvent
+        self.eventHandler = eventHandler
 
     def delete(self):
         print('delete button')
         for box in self.checkBoxs:
             if(box.getUID() != False):
                 self.targets.append(box.getUID())
-        print(self.targets)
+        self.eventHandler('adminDelete_delete', self.targets)
         self.targets.clear()
 
     def cancel(self):
         print('cancel button')
-        self.cancelEvent('adminDelete_cancel')
+        self.eventHandler('adminDelete_cancel')
+
+    def setData(self, data):
+        self.data = data
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -123,7 +126,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton_2.setText(_translate("MainWindow", "취소하기"))
+        self.pushButton_2.setText(_translate("MainWindow", "뒤로가기"))
         self.pushButton.setText(_translate("MainWindow", "삭제하기"))
 
 if __name__ == "__main__":

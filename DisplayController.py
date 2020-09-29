@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 # --- user defined module ---
 # import windows to be displayed
-from UI import MenuDisplay, TempInfoDisplay, MsgDisplay, AdminDeleteDisplay
+from UI import MenuDisplay, TempInfoDisplay, MsgDisplay, AdminDeleteDisplay, AdminAddDisplay
 import DataController
 
 # import Rasberry pi controller to communicate with rasberry pi board
@@ -66,7 +66,7 @@ class DisplayController():
             if(self.dto.qsize()>0):
                 print('is changed')
                 item = self.dto.get()
-                if(item['type'] == 'NFC'):
+                if(item['type'] == 'NFC_NAME'):
                     if(item['uid'] != None):
                         self.uid = item['uid']
                     if(item['name'] != None):
@@ -102,7 +102,7 @@ class DisplayController():
         self.windows[new]['window'].show()
 
     #Handle events at windows
-    def menuEventHandler(self, arg):
+    def menuEventHandler(self, arg, others=None):
         self.requestQ.put(arg)
         if(arg == 'userMenu'):
             self.init()
@@ -113,11 +113,30 @@ class DisplayController():
             self.selectWindow('adminMenuWindow')
 
         elif(arg == 'adminAdd'):
-            print('adminAdd')
+            adminAddWindow = QtWidgets.QMainWindow()
+            ui = AdminAddDisplay.Ui_MainWindow(self.menuEventHandler)
+            ui.setupUi(adminAddWindow)
+            ui.setStatus('사용자 추가 페이지입니다\n')
+            ui.setUID('NFC 카드를 태그에 대주세요')
+            adminAddWindow.show()
+            self.windows['adminAddWindow'] = {'window':adminAddWindow, 'ui':ui}
+
+        elif(arg == 'adminAdd_add'):
+            print('add event')
+            if(others['uid'] != '' and others['name'] != ''):
+                result = DataController.addUser(others['uid'], others['name'], others['belong'])
+                print('adminAdd_add result : ', result)
+                if(result == True):
+                    self.windows['adminAddWindow']['ui'].setStatus('추가에 성공했습니다.')
+                else:
+                    self.windows['adminAddWindow']['ui'].setStatus('저장에 실패했습니다.\nNFC ID가 같은 사람이 있는지 \n"삭제" 탭에서 확인해주세요')
+            else:
+                self.windows['adminAddWindow']['ui'].setStatus('NFC ID와 이름은 필수항목입니다.')
+
+        elif(arg == 'adminAdd_cancel'):
+            self.windows['adminAddWindow']['window'].hide()
         
         elif(arg == 'adminDelete'):
-            # print(DataController.getUserData())
-            # print('adminDelete')
             data = DataController.getUserData()
             print(data)
             adminDeleteWindow = QtWidgets.QMainWindow()
@@ -126,8 +145,23 @@ class DisplayController():
             adminDeleteWindow.show()
             self.windows['adminDeleteWindow'] = {'window':adminDeleteWindow, 'ui':ui}
         
+        elif(arg == 'adminDelete_delete'):
+            print(others)
+            if(len(others) > 0):
+                result = DataController.deleteUser(others)
+                if(result):
+                    print('삭제에 성공했습니다')
+                    data = DataController.getUserData()
+                    self.windows['adminDeleteWindow']['ui'].setData(data)
+                    self.windows['adminDeleteWindow']['ui'].setupUi(self.windows['adminDeleteWindow']['window'])
+                else:
+                    print('삭제에 실패했습니다')
+            else:
+                pass
+
         elif(arg == 'adminDelete_cancel'):
             self.windows['adminDeleteWindow']['window'].hide()
+
 
     #Initializing
     def init(self):
@@ -149,7 +183,7 @@ def Handler(requestQ, dto):
         if(requestQ.qsize()>0):
             item = requestQ.get()
             if(item == 'userMenu'):
-                dto.put(RasberryController.getNFC())
+                dto.put(RasberryController.getNameByNFC())
             elif(item == 'tempInfo'):
                 dto.put(RasberryController.getTemp())
             
