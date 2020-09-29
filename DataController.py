@@ -7,7 +7,10 @@ def getNameByNFC(nfcId):
     response = requests.get(URL + '/identify', params=params)
     state = response.status_code
     result = response.json()
-    print(result)
+    if(result['result'] == True):
+        return result['name']
+    else:
+        return None
 
 def addTempData(nfcId, temp):
     params = {'nfcId':nfcId, 'temperature':temp}
@@ -35,6 +38,6 @@ def getUserData():
 
 if __name__ == '__main__':
     # addTempData('12345678', '36.4')
-    # getNameByNFC('12345678')
+    print(getNameByNFC('12345678'))
     # addUser('12345678', '홍길동')
-    getUserData()
+    # getUserData()
