@@ -25,17 +25,23 @@ class MyCheckBox(QtWidgets.QCheckBox):
 
 class Ui_MainWindow(object):
 
-    def __init__(self, data):
+    def __init__(self, data, cancelEvent):
         self.data = data
         self.checkBoxs = []
         self.targets = []
+        self.cancelEvent = cancelEvent
 
-    def testEvent(self):
+    def delete(self):
+        print('delete button')
         for box in self.checkBoxs:
             if(box.getUID() != False):
                 self.targets.append(box.getUID())
         print(self.targets)
         self.targets.clear()
+
+    def cancel(self):
+        print('cancel button')
+        self.cancelEvent('adminDelete_cancel')
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -51,7 +57,7 @@ class Ui_MainWindow(object):
         self.tableWidget = QtWidgets.QTableWidget(self.verticalLayoutWidget)
         self.tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         
-        self.tableWidget.setRowCount(len(data))
+        self.tableWidget.setRowCount(len(self.data))
         self.tableWidget.setColumnCount(4)
 
         #horizon header name
@@ -64,7 +70,7 @@ class Ui_MainWindow(object):
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
 
         i = 0
-        for current in data:
+        for current in self.data:
             nameLabel = QtWidgets.QLabel(current['name'])
             belongLabel = QtWidgets.QLabel(current['belong'])
             nfcLabel = QtWidgets.QLabel(current['nfcid'])
@@ -94,11 +100,12 @@ class Ui_MainWindow(object):
 
         self.pushButton_2 = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.pushButton_2.setObjectName("pushButton_2")
+        self.pushButton_2.clicked.connect(self.cancel) #Event
         self.horizontalLayout.addWidget(self.pushButton_2)
 
         self.pushButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.pushButton.setObjectName("pushButton")
-        self.pushButton.clicked.connect(self.testEvent) #Event
+        self.pushButton.clicked.connect(self.delete) #Event
         self.horizontalLayout.addWidget(self.pushButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)

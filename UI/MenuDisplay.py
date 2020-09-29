@@ -13,14 +13,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_MenuWindow(object):
 
-    def __init__(self, MenuEventHandler):
+    def __init__(self, MenuEventHandler, content):
         self.MenuEventHandler = MenuEventHandler
+        self.content = content
 
     def handleUserClickEvent(self):
-        self.MenuEventHandler('userMenu')
+        self.MenuEventHandler(self.content['event_name'][0])
 
     def handleAdminClickEvent(self):
-        self.MenuEventHandler('adminMenu')
+        self.MenuEventHandler(self.content['event_name'][1])
 
     def setupUi(self, MenuWindow):
         MenuWindow.setObjectName("MenuWindow")
@@ -87,5 +88,5 @@ class Ui_MenuWindow(object):
     def retranslateUi(self, MenuWindow):
         _translate = QtCore.QCoreApplication.translate
         MenuWindow.setWindowTitle(_translate("MenuWindow", "MainWindow"))
-        self.userMenuButton.setText(_translate("MenuWindow", "사용자 메뉴"))
-        self.adminMenuButton.setText(_translate("MenuWindow", "관리자 메뉴"))
+        self.userMenuButton.setText(_translate("MenuWindow", self.content['menu_name'][0]))
+        self.adminMenuButton.setText(_translate("MenuWindow", self.content['menu_name'][1]))

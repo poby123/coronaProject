@@ -9,7 +9,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 # --- user defined module ---
 # import windows to be displayed
-from UI import MenuDisplay, TempInfoDisplay, MsgDisplays, AdminDeleteDisplay
+from UI import MenuDisplay, TempInfoDisplay, MsgDisplay, AdminDeleteDisplay
+import DataController
 
 # import Rasberry pi controller to communicate with rasberry pi board
 import RasberryController
@@ -27,42 +28,37 @@ class DisplayController():
         self.requestQ = requestQ
         self.dto = dto
 
-        #status
-        self.name = ''
-        self.uid = ''
-        self.temp = ''
-
         #interrupt flag
         self.interrupt = False
 
         #init menu window
         MenuWindow = QtWidgets.QMainWindow()
-        MenuWindowUI = MenuDisplay.Ui_MenuWindow(self.menuEventHandler)
+        MenuWindowUI = MenuDisplay.Ui_MenuWindow(self.menuEventHandler, {"menu_name":['사용자 메뉴', '관리자 메뉴'], "event_name":['userMenu', 'adminMenu']})
         MenuWindowUI.setupUi(MenuWindow)
         MenuWindow.show()
+
+        #init admin menu window
+        AdminMenuWindow = QtWidgets.QMainWindow()
+        AdminMenuWindowUI = MenuDisplay.Ui_MenuWindow(self.menuEventHandler, {"menu_name":['추가', '삭제'], "event_name":['adminAdd', 'adminDelete']})
+        AdminMenuWindowUI.setupUi(AdminMenuWindow)
+        AdminMenuWindow.hide()
 
         #init tempInfo window
         TempInfoWindow = QtWidgets.QMainWindow()
         TempInfoWindowUI = TempInfoDisplay.Ui_TempInfoWindow(37.5, self.menuEventHandler)
         TempInfoWindowUI.setupUi(TempInfoWindow)
-        TempInfoWindowUI.setName('확인 중... NFC카드를 대주세요')
-        TempInfoWindowUI.setStatus('')
         TempInfoWindow.hide()
-
-        #init msg window
-        MsgWindow = QtWidgets.QMainWindow()
-        MsgWindowUI = MsgDisplay.Ui_MsgWindow('', self.menuEventHandler)
-        MsgWindowUI.setupUi(MsgWindow)
-        MsgWindow.hide()
 
         #append windows
         self.windows['menuWindow'] = {"window" : MenuWindow, "ui" : MenuWindowUI}
-        self.windows['msgWindow'] = {"window":MsgWindow, "ui":MsgWindowUI}
+        self.windows['adminMenuWindow'] = {"window":AdminMenuWindow, "ui":AdminMenuWindowUI}
         self.windows['tempInfoWindow'] = {"window":TempInfoWindow, "ui":TempInfoWindowUI}
 
         #thread
         self.thread = threading.Thread(target=self.isChanged, daemon=True)
         self.thread.start()
+
+        self.init()
 
     def isChanged(self):
         while(True):
@@ -76,6 +72,7 @@ class DisplayController():
                     if(item['name'] != None):
                         self.name = item['name']
                         self.windows['tempInfoWindow']['ui'].setName(self.name)
+                        self.windows['tempInfoWindow']['ui'].setStatus('체온 측정 중입니다...')
                         self.menuEventHandler('tempInfo')
                     else:
                         self.windows['tempInfoWindow']['ui'].setName('등록되지 않은 카드입니다')
@@ -92,10 +89,10 @@ class DisplayController():
                         self.windows['tempInfoWindow']['ui'].setStatus('오류가 발생했습니다')
                     time.sleep(1.5)
                     self.init()
+                    #back to userMenu
                     self.menuEventHandler('userMenu')
                 
-
-                
+             
     #select window to show for window transistion
     def selectWindow(self, new):
         before = self.windowsStack[-1]
@@ -106,29 +103,36 @@ class DisplayController():
 
     #Handle events at windows
     def menuEventHandler(self, arg):
-        #put request
         self.requestQ.put(arg)
-
         if(arg == 'userMenu'):
             self.init()
             self.selectWindow('tempInfoWindow')
+        
+        elif(arg == 'adminMenu'):
+            self.init()
+            self.selectWindow('adminMenuWindow')
 
-        elif(arg=='adminMenu'):
-            pass
-
-        elif(arg=='tempInfo'):
-            pass
-            # self.selectWindow('tempInfoWindow')
-            
-        elif(arg=='backwardAtUserMenu'):
-            self.selectWindow('menuWindow') #return to menuWindow
-            self.init() #DTO, windows initializing
-            self.clear()
+        elif(arg == 'adminAdd'):
+            print('adminAdd')
+        
+        elif(arg == 'adminDelete'):
+            # print(DataController.getUserData())
+            # print('adminDelete')
+            data = DataController.getUserData()
+            print(data)
+            adminDeleteWindow = QtWidgets.QMainWindow()
+            ui = AdminDeleteDisplay.Ui_MainWindow(data, self.menuEventHandler)
+            ui.setupUi(adminDeleteWindow)
+            adminDeleteWindow.show()
+            self.windows['adminDeleteWindow'] = {'window':adminDeleteWindow, 'ui':ui}
+        
+        elif(arg == 'adminDelete_cancel'):
+            self.windows['adminDeleteWindow']['window'].hide()
 
     #Initializing
     def init(self):
         self.windows['tempInfoWindow']['ui'].setName('확인 중... NFC카드를 대주세요')
-        self.windows['tempInfoWindow']['ui'].setStatus('')
+        self.windows['tempInfoWindow']['ui'].setStatus('환영합니다')
         self.name = ''
         self.uid = ''
         self.temp = ''
@@ -138,7 +142,6 @@ class DisplayController():
             self.requestQ.get()
         while(self.dto.qsize() > 0):
             self.dto.get()
-
 
 def Handler(requestQ, dto):
     while(True):
