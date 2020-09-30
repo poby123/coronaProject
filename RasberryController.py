@@ -1,19 +1,33 @@
 import time
-import threading
-from PyQt5 import QtCore
 from multiprocessing import Queue
 import DataController
 
-def getNFC():
-    # dataController = DataController()
-    # for i in range(1, 10000000):
-    #     pass
+def getNameByNFC():
     time.sleep(3)
     dto = {}
-    dto['type'] = 'NFC'
-    dto['uid'] = 12345678
+    dto['type'] = 'NFC_NAME'
+    dto['uid'] = 1234
     dto['name'] = DataController.getNameByNFC(dto['uid'])
     dto['temp'] = None
+    return dto
+
+def getNFCId(interrupt):
+    print('get NFC ID is called in Rasberry Controller')
+    dto = {}
+    dto['type'] = 'NFC_ID'
+    dto['name'] = None
+    dto['temp'] = None
+
+    for i in range(5):
+        time.sleep(1)
+        print('getNFCID is running')
+        if(interrupt.qsize()>0):
+            item = interrupt.get()
+            print(item)
+            dto['type'] = "INTERRUPT"
+            return dto
+
+    dto['uid'] = 12345678
     return dto
 
 def getTemp():
@@ -24,9 +38,3 @@ def getTemp():
     dto['name'] = None
     dto['temp'] = 37.4
     return dto
-    
-
-if __name__ == '__main__':
-    q = Queue()
-    getNFC(q)
-    print(q.get())

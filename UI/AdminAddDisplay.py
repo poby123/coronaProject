@@ -23,7 +23,7 @@ class Ui_MainWindow(object):
         self.eventHandler('adminAdd_add', param)
 
     def setUID(self, uid):
-        self.lineEdit.setText(uid)
+        self.lineEdit.setText(str(uid))
 
     def setStatus(self, msg):
         self.label_4.setText(msg)
