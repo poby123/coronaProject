@@ -1,6 +1,7 @@
 import requests
 import time
-URL = 'http://localhost:3000/rest'
+# URL = 'http://localhost:3000/rest'
+URL = 'https://ssu-corona.herokuapp.com/rest'
 
 def getNameByNFC(nfcId):
     params = {'nfcId':nfcId}

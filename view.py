@@ -120,6 +120,7 @@ class AdminAddWidget(QGroupBox):
         self.nameEditor = QLineEdit()
         self.belongLabel = QLabel('소속 : ')
         self.belongEditor = QLineEdit()
+        self.statusLabel = QLabel('')
 
         self.cancelButton = QPushButton('뒤로가기')
         self.addButton = QPushButton('추가하기')
@@ -134,6 +135,7 @@ class AdminAddWidget(QGroupBox):
         # define style
         self.box.setContentsMargins(40, 100, 40, 0)
         labelStyle = "font-size:20px;font-family: 맑은 고딕;"
+        statusLabelStyle = labelStyle + "height:30px;"
         editorStyle = "font-size:20px;font-family: 맑은 고딕;"
         buttonStyle = "margin-top:90px; height: 50px; font-size:20px; font-family: 맑은 고딕;"
 
@@ -141,7 +143,11 @@ class AdminAddWidget(QGroupBox):
         self.nfcIdLabel.setStyleSheet(labelStyle)
         self.nameLabel.setStyleSheet(labelStyle)
         self.belongLabel.setStyleSheet(labelStyle)
-        
+
+        # status label style
+        self.statusLabel.setAlignment(Qt.AlignCenter)
+        self.statusLabel.setStyleSheet(statusLabelStyle)
+
         # editor style
         self.nfcIdEditor.setStyleSheet(editorStyle)
         self.nameEditor.setStyleSheet(editorStyle)
@@ -156,7 +162,14 @@ class AdminAddWidget(QGroupBox):
         self.box.addRow(self.nameLabel, self.nameEditor)
         self.box.addRow(self.belongLabel, self.belongEditor)
         self.box.addRow(horizonLayout)
+        self.box.addRow(self.statusLabel)
 
+
+    # set status label
+    def setStatus(self, text):
+        self.statusLabel.setText(text)
+    
+    # get text of all line editor
     def getElements(self):
         target = {}
         target['nfcId'] = self.nfcIdEditor.text()
@@ -280,6 +293,7 @@ class WidgetsController(QWidget):
     def __init__(self):
         QWidget.__init__(self, flags=Qt.Widget)
         self.resize(700,450)
+        self.widgetsList = {}
         self.widgetStack = QStackedWidget(self)
         self.init_widget()
         self.toCenter()
@@ -292,29 +306,65 @@ class WidgetsController(QWidget):
 
         self.menuWidget = MenuWidget('사용자 메뉴', '관리자 메뉴', 'userMenu','adminMenu', self.eventHandler)
         self.tempWidget = TempWidget(self.eventHandler)
-        self.adminMenuWidget = MenuWidget('멤버 추가', '멤버 삭제','addMember','deleteMember', self.eventHandler)
+        self.adminMenuWidget = MenuWidget('멤버 추가', '멤버 삭제','adminAdd','adminDelete', self.eventHandler)
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
         self.adminDeleteWidget = AdminDeleteWidget(self.eventHandler)
 
         self.widgetStack.addWidget(self.menuWidget)
+        self.widgetsList['menuWidget'] = 0
+        
         self.widgetStack.addWidget(self.tempWidget)
+        self.widgetsList['tempWidget'] = 1
+        
         self.widgetStack.addWidget(self.adminMenuWidget)
+        self.widgetsList['adminMenuWidget'] = 2
+
         self.widgetStack.addWidget(self.adminAddWidget)
+        self.widgetsList['adminAddWidget'] = 3
+
         self.widgetStack.addWidget(self.adminDeleteWidget)
-        self.widgetStack.setCurrentIndex(3)
+        self.widgetsList['adminDeleteWidget'] = 4
 
         widget_laytout.addWidget(self.widgetStack)
-    
+        self.changeWidget('menuWidget')
+
+    # move window to center point of display
     def toCenter(self):
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-    
+
+    # change displayed widget
+    def changeWidget(self, target):
+        self.widgetStack.setCurrentIndex(self.widgetsList[target])
+
+    # event handle that causes widgets
     def eventHandler(self, kind, params=None):
-        print(kind)
-        if(params!=None):
-            print(params)
+        if(kind == 'userMenu'):
+            self.changeWidget('tempWidget')
+
+        elif(kind == 'adminMenu'):
+            self.changeWidget('adminMenuWidget')
+        
+        elif(kind == 'adminAdd'):
+            self.changeWidget('adminAddWidget')
+        
+        elif(kind == 'adminDelete'):
+            self.changeWidget('adminDeleteWidget')
+        
+        elif(kind == 'adminAdd_cancel'):
+            self.changeWidget('adminMenuWidget')
+        
+        elif(kind == 'adminAdd_add'):
+            pass
+        
+        elif(kind == 'adminDelete_cancel'):
+            self.changeWidget('adminMenuWidget')
+        
+        elif(kind == 'adminDelete_delete'):
+            pass
+
     
 
 if __name__ == "__main__":
