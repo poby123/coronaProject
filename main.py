@@ -197,14 +197,20 @@ class AdminAddWidget(QGroupBox):
     ↓ AdminDeleteWidget
 '''
 class AdminDeleteWidget(QGroupBox):
-    def __init__(self, eventHandler):
+    def __init__(self, eventHandler, data=None):
         QGroupBox.__init__(self)
         #props 
         self.eventHandler = eventHandler
-
-        self.data = [
-            {"name":' ', "belong":' ', "nfcid":' '},
-        ]
+        if(data != None):
+            self.data = data
+        else : 
+            self.data = [
+                # {"name":' ', "belong":' ', "nfcid":' '},
+                {"name":'T1', "belong":'B1', "nfcid":'123'},
+                {"name":'T2', "belong":'B2', "nfcid":'456'},
+                {"name":'T3', "belong":'B3', "nfcid":'789'},
+                {"name":'T4', "belong":'B3', "nfcid":'789'},
+            ]
         self.checkBoxs = []
         self.init_widget()
     
@@ -248,14 +254,13 @@ class AdminDeleteWidget(QGroupBox):
     # data setter
     def setData(self, data):
         print(data)
+        self.table.clearContents()
         self.data = data
 
-        # clear
-        # self.table.clear()
-
-        self.table.setRowCount(len(self.data))
-        # self.drawTable() # -> 문제 발생
-        # self.resizeHeaderWidth()
+        self.table.setRowCount(len(data))
+        self.drawTable() # -> 문제 발생
+        self.resizeHeaderWidth()
+        
     
     # resize header with content
     def resizeHeaderWidth(self):
@@ -263,6 +268,7 @@ class AdminDeleteWidget(QGroupBox):
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
 
     # draw table
     def drawTable(self):
@@ -317,13 +323,32 @@ class MyCheckBox(QCheckBox):
             return self.nfcId
         else :
             return False        
+
+'''
+    ↓ Thread Worker
+'''
+class Worker(QThread):
+    new_signal = pyqtSignal(dict)
+
+    def __init__(self, responseQ, interruptQ):
+        super().__init__()
+        self.responseQ = responseQ
+        self.interruptQ = interruptQ
+
+    def run(self):
+        while(True):
+            time.sleep(1)
+            if(self.responseQ.qsize()>0):
+                item = self.responseQ.get()
+                self.new_signal.emit(item)
+
 '''
     ↓ Widgets Controller
 '''
 class View(QWidget):
     def __init__(self, requestQ, responseQ, interruptQ):
         QWidget.__init__(self, flags=Qt.Widget)
-        
+
         # Queue initialize
         self.requestQ = requestQ
         self.responseQ = responseQ
@@ -335,9 +360,46 @@ class View(QWidget):
         self.widgetStack = QStackedWidget(self)
         self.init_widget()
         self.toCenter()
-        self.handlerThread = Thread(target=self.responseHandler, args=(self.responseQ, self.interruptQ), daemon=True)
-        self.handlerThread.start()
         self.show()
+
+        # thread
+        self.worker = Worker(self.responseQ, self.interruptQ)
+        self.worker.new_signal.connect(self.responseHandler)
+        self.worker.start()
+    
+    @pyqtSlot(dict)
+    def responseHandler(self, item):
+        if(item['type'] == 'GET_NAME_TEMP'):
+            if(item['name'] == None):
+                self.tempWidget.setStatus('저장돼있지 않은 카드입니다')
+            else :
+                self.tempWidget.setName(item['name'])
+                self.tempWidget.setTemp(str(item['temp']))
+                if(item['temp'] > 37.5):
+                    self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
+                else:
+                    self.tempWidget.setStatus('정상 체온입니다.')
+                # 초기화 후 반복처리
+
+        elif(item['type']=='GET_NFCID'):
+            id = item['nfcId']
+            if(id == None):
+                self.adminAddWidget.setStatus('NFC 카드를 인식하지 못했습니다.')
+            else:
+                self.adminAddWidget.setNFCID(id)
+
+        elif(item['type']=='ADD_USER'):
+            if(item['result']):
+                self.adminAddWidget.setStatus('저장에 성공했습니다')
+            else:
+                self.adminAddWidget.setStatus('저장에 실패했습니다')
+
+        elif(item['type']=='GET_USER_LIST'):
+            data = item['result']
+            self.adminDeleteWidget.setData(data) 
+
+        elif(item['type']=='DELETE_USER'):
+            pass
 
     # init widget
     def init_widget(self):
@@ -412,45 +474,6 @@ class View(QWidget):
         elif(kind == 'adminDelete_delete'):
             self.adminDeleteWidget.setStatus('삭제중입니다. 잠시 기다려주세요')
             self.requestQ.put({'type':'DELETE_USER', 'target':params})
-
-    # thread target funtion to handle response data
-    def responseHandler(self, responseQ, interruptQ):
-        while(True):
-            time.sleep(1)
-            if(responseQ.qsize()>0):
-                print('response is called')
-                item = responseQ.get()
-                if(item['type'] == 'GET_NAME_TEMP'):
-                    if(item['name'] == None):
-                        self.tempWidget.setStatus('저장돼있지 않은 카드입니다')
-                    else :
-                        self.tempWidget.setName(item['name'])
-                        self.tempWidget.setTemp(str(item['temp']))
-                        if(item['temp'] > 37.5):
-                            self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
-                        else:
-                            self.tempWidget.setStatus('정상 체온입니다.')
-                    # 초기화 후 반복처리
-
-                elif(item['type']=='GET_NFCID'):
-                    id = item['nfcId']
-                    if(id == None):
-                        self.adminAddWidget.setStatus('NFC 카드를 인식하지 못했습니다.')
-                    else:
-                        self.adminAddWidget.setNFCID(id)
-
-                elif(item['type']=='ADD_USER'):
-                    if(item['result']):
-                        self.adminAddWidget.setStatus('저장에 성공했습니다')
-                    else:
-                        self.adminAddWidget.setStatus('저장에 실패했습니다')
-
-                elif(item['type']=='GET_USER_LIST'):
-                    data = item['result']
-                    self.adminDeleteWidget.setData(data)
-
-                elif(item['type']=='DELETE_USER'):
-                    pass
 
 '''
     ↓ Handler Function for Background Process
