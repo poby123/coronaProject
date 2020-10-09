@@ -177,6 +177,14 @@ class AdminAddWidget(QGroupBox):
     def setNFCID(self, id):
         self.nfcIdEditor.setText(str(id))
 
+    # set name
+    def setName(self, name):
+        self.nameEditor.setText(str(name))
+
+    # set belong
+    def setBelong(self, belong):
+        self.belongEditor.setText(str(belong))
+
     # set status label
     def setStatus(self, text):
         self.statusLabel.setText(str(text))
@@ -189,8 +197,11 @@ class AdminAddWidget(QGroupBox):
         target['belong'] = self.belongEditor.text()
         return target
 
+    # clear all label and lineEditor
     def clear(self):
         self.setNFCID('')
+        self.setName('')
+        self.setBelong('')
         self.setStatus('')
 
 '''
@@ -204,14 +215,9 @@ class AdminDeleteWidget(QGroupBox):
         if(data != None):
             self.data = data
         else : 
-            self.data = [
-                # {"name":' ', "belong":' ', "nfcid":' '},
-                {"name":'T1', "belong":'B1', "nfcid":'123'},
-                {"name":'T2', "belong":'B2', "nfcid":'456'},
-                {"name":'T3', "belong":'B3', "nfcid":'789'},
-                {"name":'T4', "belong":'B3', "nfcid":'789'},
-            ]
+            self.data = []
         self.checkBoxs = []
+        self.targets = []
         self.init_widget()
     
     def init_widget(self):
@@ -239,9 +245,6 @@ class AdminDeleteWidget(QGroupBox):
         labelStyle = 'font-family: 맑은 고딕; font-size:20px;'
         self.statusLabel.setStyleSheet(labelStyle)
 
-        # set header width
-        self.resizeHeaderWidth()
-
         # add widgets to box
         self.box.addWidget(self.table)
         hbox.addWidget(self.cancelButton)
@@ -253,15 +256,10 @@ class AdminDeleteWidget(QGroupBox):
 
     # data setter
     def setData(self, data):
-        print(data)
         self.table.clearContents()
         self.data = data
-
-        self.table.setRowCount(len(data))
-        self.drawTable() # -> 문제 발생
-        self.resizeHeaderWidth()
+        self.drawTable()
         
-    
     # resize header with content
     def resizeHeaderWidth(self):
         header = self.table.horizontalHeader()
@@ -269,13 +267,11 @@ class AdminDeleteWidget(QGroupBox):
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
 
-
     # draw table
     def drawTable(self):
+        self.table.setRowCount(len(self.data))
         i = 0
-
         self.checkBoxs = []
-
         for current in self.data:
             nameLabel = QLabel(current['name'])
             belongLabel = QLabel(current['belong'])
@@ -297,15 +293,21 @@ class AdminDeleteWidget(QGroupBox):
             self.table.setCellWidget(i,3, checkBoxCellWidget)
 
             i += 1
+        self.resizeHeaderWidth()
     
+    # get selected nfc id
     def getSelected(self): 
-        targets = []
         for box in self.checkBoxs:
             if(box.getUID() != False):
-                targets.append(box.getUID())
-        print(targets)
-        return targets
+                self.targets.append(box.getUID())
+        return self.targets
 
+    # update data after delete data element
+    def removeTargetData(self):
+        self.data = list(filter(lambda item: item['nfcid'] not in self.targets, self.data))
+        self.targets.clear()
+
+    # set status text at label
     def setStatus(self, status):
         self.statusLabel.setText(status)
         
@@ -325,7 +327,7 @@ class MyCheckBox(QCheckBox):
             return False        
 
 '''
-    ↓ Thread Worker
+    ↓ Thread Worker Class
 '''
 class Worker(QThread):
     new_signal = pyqtSignal(dict)
@@ -387,6 +389,7 @@ class View(QWidget):
                 self.adminAddWidget.setStatus('NFC 카드를 인식하지 못했습니다.')
             else:
                 self.adminAddWidget.setNFCID(id)
+                self.adminAddWidget.setStatus('NFC 카드 인식에 성공했습니다.')
 
         elif(item['type']=='ADD_USER'):
             if(item['result']):
@@ -396,10 +399,16 @@ class View(QWidget):
 
         elif(item['type']=='GET_USER_LIST'):
             data = item['result']
-            self.adminDeleteWidget.setData(data) 
+            self.adminDeleteWidget.setData(data)
+            self.adminDeleteWidget.setStatus('표를 가져왔습니다.')
 
         elif(item['type']=='DELETE_USER'):
-            pass
+            if(item['result']):
+                self.adminDeleteWidget.setStatus('삭제에 성공했습니다.')
+                self.adminDeleteWidget.removeTargetData()
+                self.adminDeleteWidget.drawTable()
+            else:
+                self.adminDeleteWidget.setStatus('삭제에 실패했습니다')
 
     # init widget
     def init_widget(self):
@@ -445,6 +454,8 @@ class View(QWidget):
     # event handle that causes widgets
     def eventHandler(self, kind, params=None):
         if(kind == 'userMenu'):
+            self.tempWidget.clear()
+            self.tempWidget.setStatus('NFC 카드를 대주세요.')
             self.changeWidget('tempWidget')
             self.requestQ.put({'type':'GET_NAME_TEMP'})
 
@@ -453,6 +464,7 @@ class View(QWidget):
         
         elif(kind == 'adminAdd'):
             self.adminAddWidget.clear()
+            self.adminAddWidget.setStatus('NFC 카드를 대주세요.')
             self.changeWidget('adminAddWidget')
             self.requestQ.put({'type':'GET_NFCID'})
         
@@ -462,6 +474,8 @@ class View(QWidget):
             self.requestQ.put({'type':'GET_USER_LIST'})
         
         elif(kind == 'adminAdd_cancel'):
+            self.adminAddWidget.clear()
+            self.adminAddWidget.setStatus('')
             self.changeWidget('adminMenuWidget')
         
         elif(kind == 'adminAdd_add'):
