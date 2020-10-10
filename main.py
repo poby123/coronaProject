@@ -319,10 +319,9 @@ class MyCheckBox(QCheckBox):
 class Worker(QThread):
     new_signal = pyqtSignal(dict)
 
-    def __init__(self, responseQ, interrupt):
+    def __init__(self, responseQ):
         super().__init__()
         self.responseQ = responseQ
-        self.interrupt = interrupt
 
     def run(self):
         while(True):
@@ -353,7 +352,7 @@ class View(QWidget):
         self.show()
 
         # thread
-        self.worker = Worker(self.responseQ, self.interrupt)
+        self.worker = Worker(self.responseQ)
         self.worker.new_signal.connect(self.responseHandler)
         self.worker.start()
     
