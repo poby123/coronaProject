@@ -371,11 +371,15 @@ class View(QWidget):
     
     @pyqtSlot(dict)
     def responseHandler(self, item):
-        if(item['type'] == 'GET_NAME_TEMP'):
+        if(item['type'] == 'GET_NAME'):
             if(item['name'] == None):
                 self.tempWidget.setStatus('저장돼있지 않은 카드입니다')
-            else :
+            else:
                 self.tempWidget.setName(item['name'])
+                self.tempWidget.setStatus('손목을 온도센서에 가까이 대주세요')
+                self.requestQ.put({'type':'GET_TEMP'})
+
+        elif(item['type'] == 'GET_TEMP'):
                 self.tempWidget.setTemp(str(item['temp']))
                 if(item['temp'] > 37.5):
                     self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
@@ -457,7 +461,7 @@ class View(QWidget):
             self.tempWidget.clear()
             self.tempWidget.setStatus('NFC 카드를 대주세요.')
             self.changeWidget('tempWidget')
-            self.requestQ.put({'type':'GET_NAME_TEMP'})
+            self.requestQ.put({'type':'GET_NAME'})
 
         elif(kind == 'adminMenu'):
             self.changeWidget('adminMenuWidget')
@@ -499,14 +503,14 @@ def Handler(requestQ, responseQ, interruptQ):
         print('running')
         if(requestQ.qsize() > 0):
             item = requestQ.get()
-            if(item['type'] == 'GET_NAME_TEMP'):
+            if(item['type'] == 'GET_NAME'):
                 id = RasberryController.getNFCId()
                 name = dataController.getNameByNFC(id)
-                if(name == None):
-                    responseQ.put({'type':'GET_NAME_TEMP', 'name':None})
-                else :
-                    temp = RasberryController.getTemp()
-                    responseQ.put({'type':'GET_NAME_TEMP', 'name':name, 'temp':temp})
+                responseQ.put({'type':'GET_NAME', 'name':name})
+            
+            elif(item['type'] == 'GET_TEMP'):
+                temp = RasberryController.getTemp()
+                responseQ.put({'type':'GET_TEMP', 'temp':temp})
 
             elif(item['type']=='GET_NFCID'):
                 id = RasberryController.getNFCId()
@@ -528,8 +532,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     requestQ = Queue()
     responseQ = Queue()
-    # interruptQ = Value('INTERRUPT', False)
-    interruptQ = Queue()
+    interruptQ = Value('b', False)
+    # interruptQ = Queue()
+    # ready = Value('b', True)
     view = View(requestQ, responseQ, interruptQ)
 
     background = Process(target=Handler, args=(requestQ, responseQ, interruptQ), daemon=True)
