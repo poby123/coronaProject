@@ -1,10 +1,12 @@
 import requests
 import time
+from multiprocessing import Value
 
 class DataController():
 
-    def __init__(self):
+    def __init__(self, interrupt):
         self.URL = 'https://ssu-corona.herokuapp.com/rest' 
+        self.interrupt = interrupt
 
     def getNameByNFC(self, nfcId):
         params = {'nfcId':nfcId}
@@ -30,7 +32,7 @@ class DataController():
         result = response.json()
         return result['result']
 
-    def deleteUser(self, targets):
+    def deleteUser(self,targets):
         targets = ['0'] + targets #add any element to first index of list
         data = {'target': targets}
         response = requests.post(self.URL + '/deleteUser', data=data)

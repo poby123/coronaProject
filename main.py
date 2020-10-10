@@ -54,40 +54,27 @@ class TempWidget(QGroupBox):
         self.name = QLabel('이름과 소속')
         self.temp = QLabel('체온')
         self.status = QLabel('확인중입니다')
+        self.cancelButton = QPushButton('뒤로가기')
+
+        # event 
+        self.cancelButton.clicked.connect(lambda : eventHandler('userMenu_cancel'))
+
+        # alignment
+        self.name.setAlignment(Qt.AlignCenter)
+        self.temp.setAlignment(Qt.AlignCenter)
+        self.status.setAlignment(Qt.AlignCenter)
 
         # style
-        self.name.setAlignment(Qt.AlignCenter)
-        self.name.setStyleSheet(
-            "background: white;"
-            "font-size: 25px;"
-            "font-family: 맑은 고딕;"
-            "border-width:3px;"
-            "border-style:solid;"
-            "border-color:black;"
-        )
-        self.temp.setAlignment(Qt.AlignCenter)
-        self.temp.setStyleSheet(
-            "background: white;"
-            "font-size: 25px;"
-            "font-family: 맑은 고딕;"
-            "border-width:3px;"
-            "border-style:solid;"
-            "border-color:black;"
-        )
-        self.status.setAlignment(Qt.AlignCenter)
-        self.status.setStyleSheet(
-            "background: white;"
-            "font-size: 25px;"
-            "font-family: 맑은 고딕;"
-            "border-width:3px;"
-            "border-style:solid;"
-            "border-color:black;"
-        )
+        labelStyle = "background: white; font-size: 25px; font-family: 맑은 고딕; border-width:3px; border-style:solid; border-color:black;"
+        self.name.setStyleSheet(labelStyle)
+        self.temp.setStyleSheet(labelStyle)
+        self.status.setStyleSheet(labelStyle)
 
         # add labels to box
         self.box.addWidget(self.name)
         self.box.addWidget(self.temp)
         self.box.addWidget(self.status)
+        self.box.addWidget(self.cancelButton)
 
     def setName(self, name):
         self.name.setText(name)
@@ -332,10 +319,10 @@ class MyCheckBox(QCheckBox):
 class Worker(QThread):
     new_signal = pyqtSignal(dict)
 
-    def __init__(self, responseQ, interruptQ):
+    def __init__(self, responseQ, interrupt):
         super().__init__()
         self.responseQ = responseQ
-        self.interruptQ = interruptQ
+        self.interrupt = interrupt
 
     def run(self):
         while(True):
@@ -348,13 +335,14 @@ class Worker(QThread):
     ↓ Widgets Controller
 '''
 class View(QWidget):
-    def __init__(self, requestQ, responseQ, interruptQ):
+    def __init__(self, requestQ, responseQ, interrupt, isReady):
         QWidget.__init__(self, flags=Qt.Widget)
 
-        # Queue initialize
+        # props initialize
         self.requestQ = requestQ
         self.responseQ = responseQ
-        self.interruptQ = interruptQ
+        self.interrupt = interrupt
+        self.isReady = isReady
 
         # window initialize
         self.resize(700,450)
@@ -365,7 +353,7 @@ class View(QWidget):
         self.show()
 
         # thread
-        self.worker = Worker(self.responseQ, self.interruptQ)
+        self.worker = Worker(self.responseQ, self.interrupt)
         self.worker.new_signal.connect(self.responseHandler)
         self.worker.start()
     
@@ -374,12 +362,17 @@ class View(QWidget):
         if(item['type'] == 'GET_NAME'):
             if(item['name'] == None):
                 self.tempWidget.setStatus('저장돼있지 않은 카드입니다')
+            elif(item['name'] == 'INTERRUPTED'):
+                return
             else:
                 self.tempWidget.setName(item['name'])
                 self.tempWidget.setStatus('손목을 온도센서에 가까이 대주세요')
                 self.requestQ.put({'type':'GET_TEMP'})
 
         elif(item['type'] == 'GET_TEMP'):
+                if(item['temp'] == 'INTERRUPTED'):
+                    self.interrupt.value = False # set interrupt as False
+                    return
                 self.tempWidget.setTemp(str(item['temp']))
                 if(item['temp'] > 37.5):
                     self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
@@ -391,6 +384,9 @@ class View(QWidget):
             id = item['nfcId']
             if(id == None):
                 self.adminAddWidget.setStatus('NFC 카드를 인식하지 못했습니다.')
+            elif(id == 'INTERRUPTED'):
+                self.interrupt.value = False # set interrupt as False
+                return
             else:
                 self.adminAddWidget.setNFCID(id)
                 self.adminAddWidget.setStatus('NFC 카드 인식에 성공했습니다.')
@@ -400,11 +396,13 @@ class View(QWidget):
                 self.adminAddWidget.setStatus('저장에 성공했습니다')
             else:
                 self.adminAddWidget.setStatus('저장에 실패했습니다')
+            self.interrupt.value = False # set interrupt as False
 
         elif(item['type']=='GET_USER_LIST'):
             data = item['result']
             self.adminDeleteWidget.setData(data)
             self.adminDeleteWidget.setStatus('표를 가져왔습니다.')
+            self.interrupt.value = False # set interrupt as False
 
         elif(item['type']=='DELETE_USER'):
             if(item['result']):
@@ -413,6 +411,8 @@ class View(QWidget):
                 self.adminDeleteWidget.drawTable()
             else:
                 self.adminDeleteWidget.setStatus('삭제에 실패했습니다')
+            self.interrupt.value = False # set interrupt as False
+        
 
     # init widget
     def init_widget(self):
@@ -463,6 +463,13 @@ class View(QWidget):
             self.changeWidget('tempWidget')
             self.requestQ.put({'type':'GET_NAME'})
 
+        elif(kind == 'userMenu_cancel'):
+            if(self.isReady.value == False): # if background is running
+                self.interrupt.value = True # interrupt signal
+                while(self.isReady.value == False): # wait
+                    time.sleep(0.2)
+            self.changeWidget('menuWidget')
+
         elif(kind == 'adminMenu'):
             self.changeWidget('adminMenuWidget')
         
@@ -478,6 +485,10 @@ class View(QWidget):
             self.requestQ.put({'type':'GET_USER_LIST'})
         
         elif(kind == 'adminAdd_cancel'):
+            if(self.isReady.value == False): # if background is running
+                self.interrupt.value = True # interrupt signal
+                while(self.isReady.value == False): # wait
+                    time.sleep(0.2)
             self.adminAddWidget.clear()
             self.adminAddWidget.setStatus('')
             self.changeWidget('adminMenuWidget')
@@ -487,6 +498,8 @@ class View(QWidget):
             self.requestQ.put({'type':'ADD_USER', 'nfcId':params['nfcId'], 'name':params['name'], 'belong':params['belong']})
         
         elif(kind == 'adminDelete_cancel'):
+            while(self.isReady.value == False): # wait
+                    time.sleep(0.2)
             self.changeWidget('adminMenuWidget')
         
         elif(kind == 'adminDelete_delete'):
@@ -496,24 +509,36 @@ class View(QWidget):
 '''
     ↓ Handler Function for Background Process
 '''
-def Handler(requestQ, responseQ, interruptQ):
-    dataController = DataController.DataController()
+def Handler(requestQ, responseQ, interrupt, isReady):
+    dataController = DataController.DataController(interrupt)
+    id = None
+    temp = None
+
     while(True):
         time.sleep(1)
         print('running')
         if(requestQ.qsize() > 0):
             item = requestQ.get()
+            isReady.value = False #set flag false when working...
+
+            # Get nfc id and name
             if(item['type'] == 'GET_NAME'):
-                id = RasberryController.getNFCId()
-                name = dataController.getNameByNFC(id)
-                responseQ.put({'type':'GET_NAME', 'name':name})
+                id = RasberryController.getNFCId(interrupt) # for propagation interrupt signal
+                if(id == 'INTERRUPTED'):
+                    responseQ.put({'type':'GET_NAME', 'name':id})
+                else:
+                    name = dataController.getNameByNFC(id)
+                    responseQ.put({'type':'GET_NAME', 'name':name})
             
+            # Get temperature
             elif(item['type'] == 'GET_TEMP'):
-                temp = RasberryController.getTemp()
+                temp = RasberryController.getTemp(interrupt) # for propagation interrupt signal
+                if(id != 'INTERRUPTED' and temp != 'INTERRUPTED'):
+                    result = dataController.addTempData(id, temp)
                 responseQ.put({'type':'GET_TEMP', 'temp':temp})
 
             elif(item['type']=='GET_NFCID'):
-                id = RasberryController.getNFCId()
+                id = RasberryController.getNFCId(interrupt) # for propagation interrupt signal
                 responseQ.put({'type':'GET_NFCID', 'nfcId':id})
 
             elif(item['type']=='ADD_USER'):
@@ -527,17 +552,19 @@ def Handler(requestQ, responseQ, interruptQ):
             elif(item['type']=='DELETE_USER'):
                 result = dataController.deleteUser(item['target'])
                 responseQ.put({'type':'DELETE_USER', 'result':result})
-            
+        
+            isReady.value = True # set flag true when ready
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     requestQ = Queue()
     responseQ = Queue()
-    interruptQ = Value('b', False)
-    # interruptQ = Queue()
-    # ready = Value('b', True)
-    view = View(requestQ, responseQ, interruptQ)
+    interrupt = Value('b', False)
+    isReady = Value('b', True)
+    view = View(requestQ, responseQ, interrupt, isReady)
 
-    background = Process(target=Handler, args=(requestQ, responseQ, interruptQ), daemon=True)
+    background = Process(target=Handler, args=(requestQ, responseQ, interrupt, isReady), daemon=True)
     background.start()
 
     exit(app.exec_())
