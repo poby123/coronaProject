@@ -362,6 +362,7 @@ class View(QWidget):
             if(item['name'] == None):
                 self.tempWidget.setStatus('저장돼있지 않은 카드입니다')
             elif(item['name'] == 'INTERRUPTED'):
+                self.interrupt.value = False # set interrupt as False
                 return
             else:
                 self.tempWidget.setName(item['name'])
