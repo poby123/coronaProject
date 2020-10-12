@@ -33,7 +33,6 @@ class DataController():
         return result['result']
 
     def deleteUser(self,targets):
-        targets = ['0'] + targets #add any element to first index of list
         data = {'target': targets}
         response = requests.post(self.URL + '/deleteUser', data=data)
         result = response.json()
