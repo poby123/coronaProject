@@ -1,12 +1,14 @@
-import requests
+import requests, json
 import time
 from multiprocessing import Value
 
 class DataController():
 
-    def __init__(self, interrupt):
+    def __init__(self, interrupt=None):
         self.URL = 'https://ssu-corona.herokuapp.com/rest' 
-        self.interrupt = interrupt
+        # self.URL = 'http://localhost:3000/rest'
+        if(interrupt!=None):
+            self.interrupt = interrupt
 
     def getNameByNFC(self, nfcId):
         params = {'nfcId':nfcId}
@@ -25,9 +27,10 @@ class DataController():
         result = response.json()
         print(result)
 
-    def addUser(self, nfcId, name, belong=None):
-        params = {'nfcId':nfcId, 'name':name, 'belong' : belong}
-        response = requests.get(self.URL + '/addUser', params=params)
+    def addUser(self, nfcId, name, belong):
+        data = {'target': {'nfcId':nfcId, 'name':name, 'belong' : belong}}
+        headers = {'Content-Type': 'application/json; charset=utf-8'}
+        response = requests.post(self.URL + '/addUser', headers=headers ,data=json.dumps(data))
         state = response.status_code
         result = response.json()
         return result['result']
@@ -49,9 +52,5 @@ class DataController():
             return None
 
 if __name__ == '__main__':
-    # addTempData('12345678', '36.4')
-    # print(getNameByNFC('12345678'))
-    # addUser('12345678', '홍길동')
-    # getUserData()
-    # deleteUser(['12039', '12308904', '1234'])
-    deleteUser(['12039'])
+    dc = DataController()
+    print(dc.addUser('12345678', '이름 테스트', '소속 테스트'))
