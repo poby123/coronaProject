@@ -378,7 +378,11 @@ class View(QWidget):
                     self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
                 else:
                     self.tempWidget.setStatus('정상 체온입니다.')
-                # 초기화 후 반복처리
+        
+        elif(item['type'] == 'USER_RE_INIT'):
+            self.tempWidget.clear()
+            self.tempWidget.setStatus('NFC 카드를 대주세요.')
+            self.requestQ.put({'type':'GET_NAME'})
 
         elif(item['type']=='GET_NFCID'):
             id = item['nfcId']
@@ -530,12 +534,14 @@ def Handler(requestQ, responseQ, interrupt, isReady):
                     name = dataController.getNameByNFC(id)
                     responseQ.put({'type':'GET_NAME', 'name':name})
             
-            # Get temperature
+            # Get temperature And Re init
             elif(item['type'] == 'GET_TEMP'):
                 temp = RasberryController.getTemp(interrupt) # for propagation interrupt signal
                 if(id != 'INTERRUPTED' and temp != 'INTERRUPTED'):
                     result = dataController.addTempData(id, temp)
                 responseQ.put({'type':'GET_TEMP', 'temp':temp})
+                time.sleep(2)
+                responseQ.put({'type':'USER_RE_INIT'})
 
             elif(item['type']=='GET_NFCID'):
                 id = RasberryController.getNFCId(interrupt) # for propagation interrupt signal
