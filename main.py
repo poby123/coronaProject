@@ -9,36 +9,39 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 '''
+    ↓ Header Widget
+'''
+class HeaderWidget(QGroupBox):
+    def __init__(self):
+        pass
+
+
+'''
     ↓ Menu Widget
 '''
 class MenuWidget(QGroupBox):
-    def __init__(self, menu1, menu2, eventName1, eventName2, eventHandler):
+    def __init__(self, menus, eventHandler):
         QGroupBox.__init__(self)
 
         self.box = QHBoxLayout()
         self.setLayout(self.box)
         self.setTitle("메뉴")
         
-        #define button
-        btn1 = QPushButton(menu1)
-        btn2 = QPushButton(menu2)
-
-        #style
-        self.setStyleSheet("background: white;")
         buttonStyle = "height : 300px; \
             border-width:5px; border-color:blue; border-radius: 10px; border-style:solid; \
             background: white; \
             font-size: 30px; font-weight: bold; font-family: 맑은 고딕;"
-        btn1.setStyleSheet(buttonStyle)
-        btn2.setStyleSheet(buttonStyle)
 
-        # add event handler
-        btn1.clicked.connect(lambda : eventHandler(eventName1))
-        btn2.clicked.connect(lambda : eventHandler(eventName2))
-        
-        # add buttons to box
-        self.box.addWidget(btn1)
-        self.box.addWidget(btn2)
+        #define button
+        for menu in (menus):
+            btn = QPushButton(menu['menu_name'])
+            btn.setStyleSheet(buttonStyle)
+            handler_name = menu['menu_event_name']
+            btn.clicked.connect(lambda ch, handler_name=handler_name: eventHandler(handler_name))
+            self.box.addWidget(btn)
+
+        #style
+        self.setStyleSheet("background: white;")
 
 '''
     ↓ TempWidget
@@ -424,9 +427,10 @@ class View(QWidget):
         widget_laytout = QBoxLayout(QBoxLayout.LeftToRight)
         self.setLayout(widget_laytout)
 
-        self.menuWidget = MenuWidget('사용자 메뉴', '관리자 메뉴', 'userMenu','adminMenu', self.eventHandler)
+        self.menuWidget = MenuWidget([{'menu_name': '사용자 메뉴', 'menu_event_name':'userMenu'},{'menu_name':'관리자 메뉴', 'menu_event_name':'adminMenu'}], self.eventHandler)
         self.tempWidget = TempWidget(self.eventHandler)
-        self.adminMenuWidget = MenuWidget('멤버 추가', '멤버 삭제','adminAdd','adminDelete', self.eventHandler)
+        # self.adminMenuWidget = MenuWidget('멤버 추가', '멤버 삭제','adminAdd','adminDelete', self.eventHandler)
+        self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd'},{'menu_name':'멤버 삭제', 'menu_event_name':'adminDelete'}], self.eventHandler)
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
         self.adminDeleteWidget = AdminDeleteWidget(self.eventHandler)
 
