@@ -13,19 +13,65 @@ from PyQt5.QtCore import *
 '''
 class HeaderWidget(QGroupBox):
     def __init__(self):
-        pass
+        QGroupBox.__init__(self)
+        self.init_widget()
 
+    def init_widget(self):
+
+        # define layouts
+        self.layout = QFormLayout() # HeaderWidget을 사용하는 모든 컴포넌트들에서 사용될 QFormLayout이다.
+        self.header_layout = QHBoxLayout() # Header 부분을 이룰 QHBoxLayout 이다.
+
+        # define label
+        self.header_label = QLabel("SSU CORONA PROJECT")
+
+        # add components
+        self.header_layout.addWidget(self.header_label) #header 레이아웃에 라벨을 달아준다.
+        self.layout.addRow(self.header_layout)
+        self.setLayout(self.layout)
+
+        # set styles
+        self.color1 = QColor(0,0,255)
+        self.color2 = QColor(0,0,255)
+        self.header_label_style = 'font-size:28px; font-family:Arial; font-weight:bold; color: white; margin-top: 20px; margin-bottom:20px; padding: 10px 0px;'
+        self.header_label.setStyleSheet(self.header_label_style)
+        self.header_label.setAlignment(Qt.AlignRight)
+
+        #set animation
+        self._animation = QVariantAnimation(self, valueChanged=self._animate, startValue=0.00001, endValue=0.9999, duration=500)
+        
+        # set background color
+        self.setBackgroundColor()
+
+    def _animate(self, value):
+        grad = "background-color: qlineargradient(spread:pad, x1:1, y1:0, x2:0, y2:0, stop:0 {color1}, stop:{value} {color2}, stop: 1.0 {color1});".format(
+            color1=self.color1.name(), color2=self.color2.name(), value=value
+        )
+        self.header_label.setStyleSheet(self.header_label_style + grad)
+
+    def animation(self):
+        self._animation.setDirection(QAbstractAnimation.Forward)
+        self._animation.start()
+
+    #color must be QColor(r,g,b) type
+    def setBackgroundColor(self,color1=None, color2=None):
+        if(color1 != None):
+            self.color1 = color1
+        if(color2 != None):
+            self.color2 = color2
+        self.animation()
 
 '''
     ↓ Menu Widget
 '''
-class MenuWidget(QGroupBox):
+class MenuWidget(HeaderWidget):
     def __init__(self, menus, eventHandler):
-        QGroupBox.__init__(self)
+        # QGroupBox.__init__(self)
+        super().__init__()
 
         self.box = QHBoxLayout()
-        self.setLayout(self.box)
-        self.setTitle("메뉴")
+        self.layout.addRow(self.box)
+        # self.setTitle("메뉴")
         
         buttonStyle = "height : 300px; \
             border-width:5px; border-color:blue; border-radius: 10px; border-style:solid; \
@@ -427,7 +473,7 @@ class View(QWidget):
         widget_laytout = QBoxLayout(QBoxLayout.LeftToRight)
         self.setLayout(widget_laytout)
 
-        self.menuWidget = MenuWidget([{'menu_name': '사용자 메뉴', 'menu_event_name':'userMenu'},{'menu_name':'관리자 메뉴', 'menu_event_name':'adminMenu'}], self.eventHandler)
+        self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name':'userMenu'},{'menu_name':'관리 모드', 'menu_event_name':'adminMenu'}], self.eventHandler)
         self.tempWidget = TempWidget(self.eventHandler)
         # self.adminMenuWidget = MenuWidget('멤버 추가', '멤버 삭제','adminAdd','adminDelete', self.eventHandler)
         self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd'},{'menu_name':'멤버 삭제', 'menu_event_name':'adminDelete'}], self.eventHandler)
