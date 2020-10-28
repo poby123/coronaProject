@@ -98,9 +98,6 @@ class MenuWidget(QGroupBox):
         self.setStyleSheet("background: white;")
         self.header.setBackgroundColor(QColor(0,255,0), QColor(0,0,255))
 
-    def setHeaderColor(self, color1, color2):
-        self.header.setBackgroundColor(color1, color2)
-
 '''
     ↓ TempWidget
 '''
