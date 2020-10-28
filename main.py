@@ -60,6 +60,38 @@ class HeaderWidget(QGroupBox):
         self.animationStart()
 
 '''
+    ↓ Initial Widget
+'''
+class InitialWidget(QGroupBox):
+    def __init__(self, eventHandler):
+        super().__init__()
+        self.eventHandler = eventHandler
+
+        self.init_widget()
+    
+    def init_widget(self):
+        self.layout = QFormLayout()
+        self.setLayout(self.layout)
+
+        self.box = QHBoxLayout()
+        self.layout.addRow(self.box)
+
+        # style
+        self_style = 'background:white;'
+        self.setStyleSheet(self_style)
+        self.box.setAlignment(Qt.AlignCenter)
+        label_style = 'border'
+
+        # define label
+        self.label = QLabel()
+        pixmap = QPixmap('./resources/logo_black.png').scaled(400, 400)
+        self.label.setPixmap(pixmap)
+        self.mousePressEvent = lambda e : self.eventHandler('init')
+
+        # add Component
+        self.box.addWidget(self.label)
+
+'''
     ↓ Menu Widget
 '''
 class MenuWidget(QGroupBox):
@@ -96,7 +128,8 @@ class MenuWidget(QGroupBox):
 
         #style
         self.setStyleSheet("background: white;")
-        self.header.setBackgroundColor(QColor(0,255,0), QColor(0,0,255))
+        # self.header.setBackgroundColor(QColor(0,255,0), QColor(0,0,255))
+
 
 '''
     ↓ TempWidget
@@ -136,21 +169,12 @@ class TempWidget(QGroupBox):
 
     def setName(self, name):
         self.name.setText(name)
-
-    def getName(self):
-        return self.name.text()
     
     def setTemp(self, temperature):
         self.temp.setText(temperature)
     
-    def getTemp(self):
-        return self.temp.text()
-    
     def setStatus(self, status):
         self.status.setText(status)
-    
-    def getStatus(self):
-        return self.status.text()
 
     def clear(self):
         self.setName('')
@@ -478,10 +502,11 @@ class View(QWidget):
 
     # init widget
     def init_widget(self):
-        self.setWindowTitle("Body Temperature Scanner")
+        self.setWindowTitle("IoT 체온 스캐너")
         widget_laytout = QBoxLayout(QBoxLayout.LeftToRight)
         self.setLayout(widget_laytout)
 
+        self.initialWidget = InitialWidget(self.eventHandler)
         self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name':'userMenu'},{'menu_name':'관리 모드', 'menu_event_name':'adminMenu'}], self.eventHandler)
         self.tempWidget = TempWidget(self.eventHandler)
         # self.adminMenuWidget = MenuWidget('멤버 추가', '멤버 삭제','adminAdd','adminDelete', self.eventHandler)
@@ -489,23 +514,27 @@ class View(QWidget):
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
         self.adminDeleteWidget = AdminDeleteWidget(self.eventHandler)
 
+        self.widgetStack.addWidget(self.initialWidget)
+        self.widgetsList['initialWidget'] = 0
+
         self.widgetStack.addWidget(self.menuWidget)
-        self.widgetsList['menuWidget'] = 0
+        self.widgetsList['menuWidget'] = 1
         
         self.widgetStack.addWidget(self.tempWidget)
-        self.widgetsList['tempWidget'] = 1
+        self.widgetsList['tempWidget'] = 2
         
         self.widgetStack.addWidget(self.adminMenuWidget)
-        self.widgetsList['adminMenuWidget'] = 2
+        self.widgetsList['adminMenuWidget'] = 3
 
         self.widgetStack.addWidget(self.adminAddWidget)
-        self.widgetsList['adminAddWidget'] = 3
+        self.widgetsList['adminAddWidget'] = 4
 
         self.widgetStack.addWidget(self.adminDeleteWidget)
-        self.widgetsList['adminDeleteWidget'] = 4
+        self.widgetsList['adminDeleteWidget'] = 5
 
         widget_laytout.addWidget(self.widgetStack)
-        self.changeWidget('menuWidget')
+        # self.changeWidget('menuWidget')
+        self.changeWidget('initialWidget')
 
     # move window to center point of display
     def toCenter(self):
@@ -520,7 +549,11 @@ class View(QWidget):
 
     # event handle that causes widgets
     def eventHandler(self, kind, params=None):
-        if(kind == 'userMenu'):
+
+        if(kind == 'init'):
+            self.changeWidget('menuWidget')
+
+        elif(kind == 'userMenu'):
             self.tempWidget.clear()
             self.tempWidget.setStatus('NFC 카드를 대주세요.')
             self.changeWidget('tempWidget')
