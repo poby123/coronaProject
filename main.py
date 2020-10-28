@@ -17,18 +17,15 @@ class HeaderWidget(QGroupBox):
         self.init_widget()
 
     def init_widget(self):
-
-        # define layouts
-        self.layout = QFormLayout() # HeaderWidget을 사용하는 모든 컴포넌트들에서 사용될 QFormLayout이다.
+        # define layout
         self.header_layout = QHBoxLayout() # Header 부분을 이룰 QHBoxLayout 이다.
+        self.setLayout(self.header_layout)
 
         # define label
         self.header_label = QLabel("SSU CORONA PROJECT")
 
         # add components
         self.header_layout.addWidget(self.header_label) #header 레이아웃에 라벨을 달아준다.
-        self.layout.addRow(self.header_layout)
-        self.setLayout(self.layout)
 
         # set styles
         self.color1 = QColor(0,0,255)
@@ -38,20 +35,21 @@ class HeaderWidget(QGroupBox):
         self.header_label.setAlignment(Qt.AlignRight)
 
         #set animation
-        self._animation = QVariantAnimation(self, valueChanged=self._animate, startValue=0.00001, endValue=0.9999, duration=500)
+        self.animation = QVariantAnimation(self, valueChanged=self.animate, startValue=0.00001, endValue=0.9999, duration=500)
         
         # set background color
         self.setBackgroundColor()
 
-    def _animate(self, value):
-        grad = "background-color: qlineargradient(spread:pad, x1:1, y1:0, x2:0, y2:0, stop:0 {color1}, stop:{value} {color2}, stop: 1.0 {color1});".format(
+    def animate(self, value):
+        grad = "background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 {color1}, stop:{value} {color2}, stop: 1.0 {color1});".format(
             color1=self.color1.name(), color2=self.color2.name(), value=value
         )
         self.header_label.setStyleSheet(self.header_label_style + grad)
 
-    def animation(self):
-        self._animation.setDirection(QAbstractAnimation.Forward)
-        self._animation.start()
+    # do animation effect
+    def animationStart(self):
+        self.animation.setDirection(QAbstractAnimation.Forward)
+        self.animation.start()
 
     #color must be QColor(r,g,b) type
     def setBackgroundColor(self,color1=None, color2=None):
@@ -59,19 +57,29 @@ class HeaderWidget(QGroupBox):
             self.color1 = color1
         if(color2 != None):
             self.color2 = color2
-        self.animation()
+        self.animationStart()
 
 '''
     ↓ Menu Widget
 '''
-class MenuWidget(HeaderWidget):
+class MenuWidget(QGroupBox):
     def __init__(self, menus, eventHandler):
-        # QGroupBox.__init__(self)
         super().__init__()
 
+        self.menus = menus
+        self.eventHandler = eventHandler
+
+        self.init_widget()
+
+    def init_widget(self):
+        self.layout = QFormLayout()
+        self.setLayout(self.layout)
+
         self.box = QHBoxLayout()
+        self.header = HeaderWidget()
+
+        self.layout.addRow(self.header)
         self.layout.addRow(self.box)
-        # self.setTitle("메뉴")
         
         buttonStyle = "height : 300px; \
             border-width:5px; border-color:blue; border-radius: 10px; border-style:solid; \
@@ -79,15 +87,19 @@ class MenuWidget(HeaderWidget):
             font-size: 30px; font-weight: bold; font-family: 맑은 고딕;"
 
         #define button
-        for menu in (menus):
+        for menu in (self.menus):
             btn = QPushButton(menu['menu_name'])
             btn.setStyleSheet(buttonStyle)
             handler_name = menu['menu_event_name']
-            btn.clicked.connect(lambda ch, handler_name=handler_name: eventHandler(handler_name))
+            btn.clicked.connect(lambda ch, handler_name=handler_name: self.eventHandler(handler_name))
             self.box.addWidget(btn)
 
         #style
         self.setStyleSheet("background: white;")
+        self.header.setBackgroundColor(QColor(0,255,0), QColor(0,0,255))
+
+    def setHeaderColor(self, color1, color2):
+        self.header.setBackgroundColor(color1, color2)
 
 '''
     ↓ TempWidget
