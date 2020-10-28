@@ -318,128 +318,7 @@ class AdminAddWidget(QGroupBox):
         self.setName('')
         self.setBelong('')
         self.setStatus('')
-
-'''
-    ↓ AdminDeleteWidget
-'''
-class AdminDeleteWidget(QGroupBox):
-    def __init__(self, eventHandler, data=None):
-        QGroupBox.__init__(self)
-        #props 
-        self.eventHandler = eventHandler
-        if(data != None):
-            self.data = data
-        else : 
-            self.data = []
-        self.checkBoxs = []
-        self.targets = []
-        self.init_widget()
     
-    def init_widget(self):
-        self.box = QFormLayout()
-        hbox = QHBoxLayout()
-        self.setLayout(self.box)
-        self.setTitle("멤버 삭제")
-
-        # define widgets
-        self.table = QTableWidget(len(self.data),4)
-        self.table.setHorizontalHeaderLabels(["이름", "소속", "NFC ID", "삭제"])
-        self.cancelButton = QPushButton('뒤로가기')
-        self.deleteButton = QPushButton('삭제하기')
-        self.statusLabel = QLabel('')
-
-        # button event handler
-        self.cancelButton.clicked.connect(lambda : self.eventHandler('adminDelete_cancel'))
-        self.deleteButton.clicked.connect(lambda : self.eventHandler('adminDelete_delete',  self.getSelected()))
-
-        # style
-        buttonStyle = "height:40px; font-size: 20px; font-family: 맑은 고딕;"
-        self.cancelButton.setStyleSheet(buttonStyle)
-        self.deleteButton.setStyleSheet(buttonStyle)
-
-        labelStyle = 'font-family: 맑은 고딕; font-size:20px;'
-        self.statusLabel.setStyleSheet(labelStyle)
-
-        # add widgets to box
-        self.box.addWidget(self.table)
-        hbox.addWidget(self.cancelButton)
-        hbox.addWidget(self.deleteButton)
-        self.box.addRow(hbox)
-        self.box.addRow(self.statusLabel)
-
-        self.drawTable()
-
-    # data setter
-    def setData(self, data):
-        self.table.clearContents()
-        self.data = data
-        self.drawTable()
-        
-    # resize header with content
-    def resizeHeaderWidth(self):
-        header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-
-    # draw table
-    def drawTable(self):
-        self.table.setRowCount(len(self.data))
-        i = 0
-        self.checkBoxs = []
-        for current in self.data:
-            nameLabel = QLabel(current['name'])
-            belongLabel = QLabel(current['belong'])
-            nfcLabel = QLabel(current['nfcid'])
-            checkbox = MyCheckBox(current['nfcid'])
-            
-            self.checkBoxs.append(checkbox)
-
-            self.table.setCellWidget(i,0,nameLabel)
-            self.table.setCellWidget(i,1, belongLabel)
-            self.table.setCellWidget(i,2, nfcLabel)
-
-            checkBoxCellWidget = QWidget()
-            lay_out = QHBoxLayout(checkBoxCellWidget)
-            lay_out.addWidget(checkbox)
-            lay_out.setAlignment(Qt.AlignCenter)
-            lay_out.setContentsMargins(0,0,0,0)
-            checkBoxCellWidget.setLayout(lay_out)
-            self.table.setCellWidget(i,3, checkBoxCellWidget)
-
-            i += 1
-        self.resizeHeaderWidth()
-    
-    # get selected nfc id
-    def getSelected(self): 
-        for box in self.checkBoxs:
-            if(box.getUID() != False):
-                self.targets.append(box.getUID())
-        return self.targets
-
-    # update data after delete data element
-    def removeTargetData(self):
-        self.data = list(filter(lambda item: item['nfcid'] not in self.targets, self.data))
-        self.targets.clear()
-
-    # set status text at label
-    def setStatus(self, status):
-        self.statusLabel.setText(status)
-        
-'''
-    ↓ My Checkbox for Admin Delete Widget
-'''
-class MyCheckBox(QCheckBox):
-    def __init__(self, nfcId):
-        super().__init__()
-        self.nfcId = nfcId
-        self.setStyleSheet("QCheckBox::indicator { width: 20px; height: 20px;}")
-
-    def getUID(self):
-        if(self.isChecked()):
-            return self.nfcId
-        else :
-            return False        
 
 '''
     ↓ Thread Worker Class
@@ -539,15 +418,6 @@ class View(QWidget):
             self.adminDeleteWidget.setData(data)
             self.adminDeleteWidget.setStatus('표를 가져왔습니다.')
             self.interrupt.value = False # set interrupt as False
-
-        elif(item['type']=='DELETE_USER'):
-            if(item['result']):
-                self.adminDeleteWidget.setStatus('삭제에 성공했습니다.')
-                self.adminDeleteWidget.removeTargetData()
-                self.adminDeleteWidget.drawTable()
-            else:
-                self.adminDeleteWidget.setStatus('삭제에 실패했습니다')
-            self.interrupt.value = False # set interrupt as False
         
 
     # init widget
@@ -559,10 +429,8 @@ class View(QWidget):
         self.initialWidget = InitialWidget(self.eventHandler)
         self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name':'userMenu'},{'menu_name':'관리 모드', 'menu_event_name':'adminMenu'}], self.eventHandler)
         self.tempWidget = TempWidget(self.eventHandler)
-        # self.adminMenuWidget = MenuWidget('멤버 추가', '멤버 삭제','adminAdd','adminDelete', self.eventHandler)
-        self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd'},{'menu_name':'멤버 삭제', 'menu_event_name':'adminDelete'}], self.eventHandler)
+        self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd'}], self.eventHandler)
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
-        self.adminDeleteWidget = AdminDeleteWidget(self.eventHandler)
         self.nfcWaitingWidget = NFCWatingWidget([{'menu_name':'뒤로가기', 'menu_event_name':'userMenu_cancel'}], self.eventHandler)
 
         self.widgetStack.addWidget(self.initialWidget)
@@ -580,11 +448,8 @@ class View(QWidget):
         self.widgetStack.addWidget(self.adminAddWidget)
         self.widgetsList['adminAddWidget'] = 4
 
-        self.widgetStack.addWidget(self.adminDeleteWidget)
-        self.widgetsList['adminDeleteWidget'] = 5
-
         self.widgetStack.addWidget(self.nfcWaitingWidget)
-        self.widgetsList['nfcWaitingWidget'] = 6
+        self.widgetsList['nfcWaitingWidget'] = 5
 
         widget_laytout.addWidget(self.widgetStack)
         # self.changeWidget('menuWidget')
@@ -632,11 +497,6 @@ class View(QWidget):
             self.changeWidget('adminAddWidget')
             self.requestQ.put({'type':'GET_NFCID'})
         
-        elif(kind == 'adminDelete'):
-            self.adminDeleteWidget.setStatus('표를 불러오는 중입니다.')
-            self.changeWidget('adminDeleteWidget')
-            self.requestQ.put({'type':'GET_USER_LIST'})
-        
         elif(kind == 'adminAdd_cancel'):
             if(self.isReady.value == False): # if background is running
                 self.interrupt.value = True # interrupt signal
@@ -649,15 +509,6 @@ class View(QWidget):
         elif(kind == 'adminAdd_add'):
             self.adminAddWidget.setStatus('처리중입니다.')
             self.requestQ.put({'type':'ADD_USER', 'nfcId':params['nfcId'], 'name':params['name'], 'belong':params['belong']})
-        
-        elif(kind == 'adminDelete_cancel'):
-            while(self.isReady.value == False): # wait
-                    time.sleep(0.2)
-            self.changeWidget('adminMenuWidget')
-        
-        elif(kind == 'adminDelete_delete'):
-            self.adminDeleteWidget.setStatus('삭제중입니다. 잠시 기다려주세요')
-            self.requestQ.put({'type':'DELETE_USER', 'target':params})
 
 '''
     ↓ Handler Function for Background Process
@@ -706,10 +557,6 @@ def Handler(requestQ, responseQ, interrupt, isReady):
             elif(item['type']=='GET_USER_LIST'):
                 result = dataController.getUserData()
                 responseQ.put({'type':'GET_USER_LIST', 'result':result})
-
-            elif(item['type']=='DELETE_USER'):
-                result = dataController.deleteUser(item['target'])
-                responseQ.put({'type':'DELETE_USER', 'result':result})
         
             isReady.value = True # set flag true when ready
 
