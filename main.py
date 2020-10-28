@@ -35,7 +35,7 @@ class HeaderWidget(QGroupBox):
         self.header_label.setAlignment(Qt.AlignRight)
 
         #set animation
-        self.animation = QVariantAnimation(self, valueChanged=self.animate, startValue=0.00001, endValue=0.9999, duration=500)
+        self.animation = QVariantAnimation(self, valueChanged=self.animate, startValue=0.00001, endValue=1.0, duration=1000)
         
         # set background color
         self.setBackgroundColor()
@@ -128,8 +128,55 @@ class MenuWidget(QGroupBox):
 
         #style
         self.setStyleSheet("background: white;")
-        # self.header.setBackgroundColor(QColor(0,255,0), QColor(0,0,255))
+        self.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
 
+
+'''
+    ↓ NFC Wating Widget
+'''
+class NFCWatingWidget(QGroupBox):
+    def __init__(self, menus, eventHandler):
+        super().__init__()
+        self.menus = menus
+        self.eventHandler = eventHandler
+
+        self.init_widget()
+    
+    def init_widget(self):
+        # define layout
+        self.layout = QFormLayout()
+        self.setLayout(self.layout)
+        self.gif_box = QVBoxLayout()
+        self.button_box = QHBoxLayout()
+        self.header = HeaderWidget()
+
+        # add sub-layout to layout
+        self.layout.addRow(self.header)
+        self.layout.addRow(self.gif_box)
+        self.layout.addRow(self.button_box)
+
+        # style
+        self_style = 'background: white;'
+        self.setStyleSheet(self_style)
+        button_style = 'font-size: 20px; font-family:맑은 고딕; font-weight: bold; border-width:2px; border-style:solid; border-color:blue; padding: 5px 0;'
+
+        # define components
+        self.label = QLabel('하단의 리더기에 카드를 접촉해주십시오')
+        self.gif_box.addWidget(self.label)
+
+        for menu in (self.menus):
+            btn = QPushButton(menu['menu_name'])
+            btn.setStyleSheet(button_style)
+            handler_name = menu['menu_event_name']
+            btn.clicked.connect(lambda ch, handler_name=handler_name: self.eventHandler(handler_name))
+            self.button_box.addWidget(btn)
+
+    # set status message
+    def setStatus(self, status=None):
+        if(status == None):
+            self.label.setText('하단의 리더기에 카드를 접촉해주십시오')
+        else:    
+            self.label.setText(status)
 
 '''
     ↓ TempWidget
@@ -139,7 +186,6 @@ class TempWidget(QGroupBox):
         QGroupBox.__init__(self)
         self.box = QBoxLayout(QBoxLayout.TopToBottom)
         self.setLayout(self.box)
-        self.setTitle("체온 확인")
 
         # define label
         self.name = QLabel('이름과 소속')
@@ -442,7 +488,8 @@ class View(QWidget):
     def responseHandler(self, item):
         if(item['type'] == 'GET_NAME'):
             if(item['name'] == None):
-                self.tempWidget.setStatus('저장돼있지 않은 카드입니다')
+                self.nfcWaitingWidget.setStatus('저장돼있지 않은 카드입니다')
+                self.nfcWaitingWidget.header.setBackgroundColor(QColor(255,0,0), QColor(0,0,255))
             elif(item['name'] == 'INTERRUPTED'):
                 self.interrupt.value = False # set interrupt as False
                 return
@@ -462,8 +509,11 @@ class View(QWidget):
                     self.tempWidget.setStatus('정상 체온입니다.')
         
         elif(item['type'] == 'USER_RE_INIT'):
-            self.tempWidget.clear()
-            self.tempWidget.setStatus('NFC 카드를 대주세요.')
+            self.nfcWaitingWidget.setStatus()
+            self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255),QColor(0,0,255))
+            self.changeWidget('nfcWaitingWidget')
+            # self.tempWidget.clear()
+            # self.tempWidget.setStatus('NFC 카드를 대주세요.')
             self.requestQ.put({'type':'GET_NAME'})
 
         elif(item['type']=='GET_NFCID'):
@@ -513,6 +563,7 @@ class View(QWidget):
         self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd'},{'menu_name':'멤버 삭제', 'menu_event_name':'adminDelete'}], self.eventHandler)
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
         self.adminDeleteWidget = AdminDeleteWidget(self.eventHandler)
+        self.nfcWaitingWidget = NFCWatingWidget([{'menu_name':'뒤로가기', 'menu_event_name':'userMenu_cancel'}], self.eventHandler)
 
         self.widgetStack.addWidget(self.initialWidget)
         self.widgetsList['initialWidget'] = 0
@@ -532,6 +583,9 @@ class View(QWidget):
         self.widgetStack.addWidget(self.adminDeleteWidget)
         self.widgetsList['adminDeleteWidget'] = 5
 
+        self.widgetStack.addWidget(self.nfcWaitingWidget)
+        self.widgetsList['nfcWaitingWidget'] = 6
+
         widget_laytout.addWidget(self.widgetStack)
         # self.changeWidget('menuWidget')
         self.changeWidget('initialWidget')
@@ -549,15 +603,18 @@ class View(QWidget):
 
     # event handle that causes widgets
     def eventHandler(self, kind, params=None):
-
         if(kind == 'init'):
             self.changeWidget('menuWidget')
 
         elif(kind == 'userMenu'):
-            self.tempWidget.clear()
-            self.tempWidget.setStatus('NFC 카드를 대주세요.')
-            self.changeWidget('tempWidget')
+            self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
+            self.changeWidget('nfcWaitingWidget')
             self.requestQ.put({'type':'GET_NAME'})
+
+            # self.tempWidget.clear()
+            # self.tempWidget.setStatus('NFC 카드를 대주세요.')
+            # self.changeWidget('tempWidget')
+            # self.requestQ.put({'type':'GET_NAME'})
 
         elif(kind == 'userMenu_cancel'):
             if(self.isReady.value == False): # if background is running
@@ -625,6 +682,9 @@ def Handler(requestQ, responseQ, interrupt, isReady):
                 else:
                     name = dataController.getNameByNFC(id)
                     responseQ.put({'type':'GET_NAME', 'name':name})
+                    if(name == None):
+                        time.sleep(3)
+                        responseQ.put({'type':'USER_RE_INIT'})
             
             # Get temperature And Re init
             elif(item['type'] == 'GET_TEMP'):
