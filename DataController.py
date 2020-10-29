@@ -5,8 +5,8 @@ from multiprocessing import Value
 class DataController():
 
     def __init__(self, interrupt=None):
-        # self.URL = 'https://ssu-corona.herokuapp.com/rest' 
-        self.URL = 'http://localhost:3000/rest'
+        self.URL = 'https://ssu-corona.herokuapp.com/rest' 
+        # self.URL = 'http://localhost:3000/rest'
         if(interrupt!=None):
             self.interrupt = interrupt
 
