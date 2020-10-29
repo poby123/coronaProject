@@ -633,7 +633,8 @@ def Handler(requestQ, responseQ, interrupt, isReady):
                     responseQ.put({'type':'GET_USER_INFO', 'user_info':id})
                 else:
                     user_info = dataController.getUserDataByNFC(id)
-                    responseQ.put({'type':'GET_USER_INFO', 'user_info':user_info})
+                    if(interrupt.value != True):
+                        responseQ.put({'type':'GET_USER_INFO', 'user_info':user_info})
                     # print(user_info)
                     if(user_info == None):
                         time.sleep(show_time)
