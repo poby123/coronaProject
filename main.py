@@ -230,12 +230,12 @@ class TempWidget(QGroupBox):
         self.box = QVBoxLayout()
 
         # define label
-        self.welcome_label = QLabel()
-        self.name_label = QLabel()
-        self.id_label = QLabel()
-        self.belong_label = QLabel()
-        self.temp_label = QLabel()
-        self.status_label = QLabel()
+        self.welcome_label = QLabel('')
+        self.name_label = QLabel('')
+        self.id_label = QLabel('')
+        self.belong_label = QLabel('')
+        self.temp_label = QLabel('')
+        self.status_label = QLabel('')
 
         # alignment
         self.welcome_label.setAlignment(Qt.AlignCenter)
@@ -246,7 +246,7 @@ class TempWidget(QGroupBox):
         self.setStyleSheet('background:white;')
         self.welcome_label.setStyleSheet('font-size:25px; font-family:맑은 고딕;')
 
-        self.center_label_style = 'font-size:16px; font-family:맑은 고딕; padding-left:5em; '
+        self.center_label_style = 'font-size:16px; font-family:맑은 고딕;'
         self.name_label.setStyleSheet(self.center_label_style)
         self.id_label.setStyleSheet(self.center_label_style)
         self.belong_label.setStyleSheet(self.center_label_style)
@@ -257,20 +257,19 @@ class TempWidget(QGroupBox):
 
         # add component
         self.box.addWidget(QLabel()) # for spacing
-        self.box.addWidget(self.welcome_label)
-        self.box.addWidget(QLabel())
         self.box.addWidget(self.name_label)
         self.box.addWidget(self.id_label)
         self.box.addWidget(self.belong_label)
         self.box.addWidget(self.temp_label)
         self.box.addWidget(QLabel())
-        self.box.addWidget(self.status_label)
 
         self.resize(700,450)
 
         # assemble
         self.layout.addRow(self.header)
+        self.layout.addRow(self.welcome_label)
         self.layout.addRow(self.box)
+        self.layout.addRow(self.status_label)
 
     # name setter
     def setName(self, name):
