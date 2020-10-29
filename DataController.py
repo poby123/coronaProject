@@ -5,18 +5,18 @@ from multiprocessing import Value
 class DataController():
 
     def __init__(self, interrupt=None):
-        self.URL = 'https://ssu-corona.herokuapp.com/rest' 
-        # self.URL = 'http://localhost:3000/rest'
+        # self.URL = 'https://ssu-corona.herokuapp.com/rest' 
+        self.URL = 'http://localhost:3000/rest'
         if(interrupt!=None):
             self.interrupt = interrupt
 
-    def getNameByNFC(self, nfcId):
+    def getUserDataByNFC(self, nfcId):
         params = {'nfcId':nfcId}
         response = requests.get(self.URL + '/identify', params=params)
         state = response.status_code
         result = response.json()
         if(result['result'] == True):
-            return result['name']
+            return result['obj']
         else:
             return None
 
@@ -27,8 +27,8 @@ class DataController():
         result = response.json()
         print(result)
 
-    def addUser(self, nfcId, name, belong):
-        data = {'target': {'nfcId':nfcId, 'name':name, 'belong' : belong}}
+    def addUser(self, nfcId, name, belong, id):
+        data = {'target': {'nfcId':nfcId, 'name':name, 'belong' : belong, 'id': id}}
         headers = {'Content-Type': 'application/json; charset=utf-8'}
         response = requests.post(self.URL + '/addUser', headers=headers ,data=json.dumps(data))
         state = response.status_code
@@ -53,4 +53,6 @@ class DataController():
 
 if __name__ == '__main__':
     dc = DataController()
-    print(dc.addUser('12345678', '이름 테스트', '소속 테스트'))
+    # print(dc.addUser('12345678', '이름 테스트', '소속 테스트'))
+    print(dc.getUserDataByNFC(1234))
+    

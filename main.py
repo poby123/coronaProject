@@ -302,6 +302,8 @@ class AdminAddWidget(QGroupBox):
         self.nameEditor = QLineEdit()
         self.belongLabel = QLabel('소속 : ')
         self.belongEditor = QLineEdit()
+        self.idLabel = QLabel('학번/아이디: ')
+        self.idEditor = QLineEdit()
         self.statusLabel = QLabel('')
 
         self.cancelButton = QPushButton('뒤로가기')
@@ -325,6 +327,7 @@ class AdminAddWidget(QGroupBox):
         self.nfcIdLabel.setStyleSheet(labelStyle)
         self.nameLabel.setStyleSheet(labelStyle)
         self.belongLabel.setStyleSheet(labelStyle)
+        self.idLabel.setStyleSheet(labelStyle)
 
         # status label style
         self.statusLabel.setAlignment(Qt.AlignCenter)
@@ -334,7 +337,8 @@ class AdminAddWidget(QGroupBox):
         self.nfcIdEditor.setStyleSheet(editorStyle)
         self.nameEditor.setStyleSheet(editorStyle)
         self.belongEditor.setStyleSheet(editorStyle)
-        
+        self.idEditor.setStyleSheet(editorStyle)
+
         #button style
         self.cancelButton.setStyleSheet(buttonStyle)
         self.addButton.setStyleSheet(buttonStyle)
@@ -343,6 +347,7 @@ class AdminAddWidget(QGroupBox):
         self.box.addRow(self.nfcIdLabel, self.nfcIdEditor)
         self.box.addRow(self.nameLabel, self.nameEditor)
         self.box.addRow(self.belongLabel, self.belongEditor)
+        self.box.addRow(self.idLabel, self.idEditor)
         self.box.addRow(horizonLayout)
         self.box.addRow(self.statusLabel)
 
@@ -358,6 +363,10 @@ class AdminAddWidget(QGroupBox):
     def setBelong(self, belong):
         self.belongEditor.setText(str(belong))
 
+    # set id
+    def setId(self, id):
+        self.idEditor.setText(str(id))
+
     # set status label
     def setStatus(self, text):
         self.statusLabel.setText(str(text))
@@ -368,6 +377,7 @@ class AdminAddWidget(QGroupBox):
         target['nfcId'] = self.nfcIdEditor.text()
         target['name'] = self.nameEditor.text()
         target['belong'] = self.belongEditor.text()
+        target['id'] = self.idEditor.text()
         return target
 
     # clear all label and lineEditor
@@ -375,6 +385,7 @@ class AdminAddWidget(QGroupBox):
         self.setNFCID('')
         self.setName('')
         self.setBelong('')
+        self.setId('')
         self.setStatus('')
     
 
@@ -423,19 +434,23 @@ class View(QWidget):
     
     @pyqtSlot(dict)
     def responseHandler(self, item):
-        if(item['type'] == 'GET_NAME'):
-            if(item['name'] == None):
+        if(item['type'] == 'GET_USER_INFO'):
+            if(item['user_info'] == None):
                 self.nfcWaitingWidget.setStatus('저장돼있지 않은 카드입니다')
                 self.nfcWaitingWidget.header.setBackgroundColor(QColor(255,0,0), QColor(0,0,255))
-            elif(item['name'] == 'INTERRUPTED'):
+            elif(item['user_info'] == 'INTERRUPTED'):
                 self.interrupt.value = False # set interrupt as False
                 return
             else:
-                self.tempWidget.setName(item['name'])
+                user_info = item['user_info']
+                self.tempWidget.setName(user_info['name'])
+                self.tempWidget.setBelong(user_info['belong'])
+                if(user_info['id'] != None):
+                    self.tempWidget.setId(user_info['id'])
                 self.tempWidget.setStatus('손목을 온도센서에 가까이 대주세요')
-                self.tempWidget.header.setBackgroundColor(QColor(0,255,0), QColor(0,0,255))
+                self.tempWidget.header.setBackgroundColor(QColor(0,176,80), QColor(0,0,255))
                 self.changeWidget('tempWidget')
-                # self.requestQ.put({'type':'GET_TEMP'})
+                self.requestQ.put({'type':'GET_TEMP'})
 
         elif(item['type'] == 'GET_TEMP'):
                 if(item['temp'] == 'INTERRUPTED'):
@@ -443,15 +458,17 @@ class View(QWidget):
                     return
                 self.tempWidget.setTemp(str(item['temp']))
                 if(item['temp'] > 37.5):
+                    self.tempWidget.header.setBackgroundColor(QColor(255,0,0), QColor(0,176,80))
                     self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
                 else:
+                    self.tempWidget.header.setBackgroundColor(QColor(0,0,255), QColor(0,176,80))
                     self.tempWidget.setStatus('정상 체온입니다.')
         
         elif(item['type'] == 'USER_RE_INIT'):
             self.nfcWaitingWidget.setStatus()
             self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255),QColor(0,0,255))
             self.changeWidget('nfcWaitingWidget')
-            self.requestQ.put({'type':'GET_NAME'})
+            self.requestQ.put({'type':'GET_USER_INFO'})
 
         elif(item['type']=='GET_NFCID'):
             id = item['nfcId']
@@ -531,7 +548,7 @@ class View(QWidget):
         elif(kind == 'userMenu'):
             self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
             self.changeWidget('nfcWaitingWidget')
-            self.requestQ.put({'type':'GET_NAME'})
+            self.requestQ.put({'type':'GET_USER_INFO'})
 
         elif(kind == 'userMenu_cancel'):
             if(self.isReady.value == False): # if background is running
@@ -560,7 +577,7 @@ class View(QWidget):
         
         elif(kind == 'adminAdd_add'):
             self.adminAddWidget.setStatus('처리중입니다.')
-            self.requestQ.put({'type':'ADD_USER', 'nfcId':params['nfcId'], 'name':params['name'], 'belong':params['belong']})
+            self.requestQ.put({'type':'ADD_USER', 'nfcId':params['nfcId'], 'name':params['name'], 'belong':params['belong'], 'id':params['id']})
 
 '''
     ↓ Handler Function for Background Process
@@ -569,6 +586,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
     dataController = DataController.DataController(interrupt)
     id = None
     temp = None
+    show_time = 4 #seconds
 
     while(True):
         time.sleep(1)
@@ -578,15 +596,16 @@ def Handler(requestQ, responseQ, interrupt, isReady):
             isReady.value = False #set flag false when working...
 
             # Get nfc id and name
-            if(item['type'] == 'GET_NAME'):
+            if(item['type'] == 'GET_USER_INFO'):
                 id = RasberryController.getNFCId(interrupt) # for propagation interrupt signal
                 if(id == 'INTERRUPTED'):
-                    responseQ.put({'type':'GET_NAME', 'name':id})
+                    responseQ.put({'type':'GET_USER_INFO', 'user_info':id})
                 else:
-                    name = dataController.getNameByNFC(id)
-                    responseQ.put({'type':'GET_NAME', 'name':name})
-                    if(name == None):
-                        time.sleep(3)
+                    user_info = dataController.getUserDataByNFC(id)
+                    responseQ.put({'type':'GET_USER_INFO', 'user_info':user_info})
+                    # print(user_info)
+                    if(user_info == None):
+                        time.sleep(show_time)
                         responseQ.put({'type':'USER_RE_INIT'})
             
             # Get temperature And Re init
@@ -595,7 +614,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
                 if(id != 'INTERRUPTED' and temp != 'INTERRUPTED'):
                     result = dataController.addTempData(id, temp)
                 responseQ.put({'type':'GET_TEMP', 'temp':temp})
-                time.sleep(2)
+                time.sleep(show_time)
                 responseQ.put({'type':'USER_RE_INIT'})
 
             elif(item['type']=='GET_NFCID'):
@@ -603,7 +622,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
                 responseQ.put({'type':'GET_NFCID', 'nfcId':id})
 
             elif(item['type']=='ADD_USER'):
-                result = dataController.addUser(item['nfcId'], item['name'], item['belong'])
+                result = dataController.addUser(item['nfcId'], item['name'], item['belong'], item['id'])
                 responseQ.put({'type':'ADD_USER', 'result':result})
 
             elif(item['type']=='GET_USER_LIST'):
