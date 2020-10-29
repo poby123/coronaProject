@@ -182,50 +182,108 @@ class NFCWatingWidget(QGroupBox):
     ↓ TempWidget
 '''
 class TempWidget(QGroupBox):
-    def __init__(self, eventHandler):
-        QGroupBox.__init__(self)
-        self.box = QBoxLayout(QBoxLayout.TopToBottom)
-        self.setLayout(self.box)
+    def __init__(self):
+        super().__init__()
+
+        # define info
+        self.name = ''
+        self.id = ''
+        self.belong = ''
+        self.temp = ''
+        self.status = ''
+
+        # initializing widget
+        self.init_widget()
+
+    def init_widget(self):
+        self.layout = QFormLayout()
+        self.setLayout(self.layout)
+
+        self.header = HeaderWidget()
+        self.box = QVBoxLayout()
 
         # define label
-        self.name = QLabel('이름과 소속')
-        self.temp = QLabel('체온')
-        self.status = QLabel('확인중입니다')
-        self.cancelButton = QPushButton('뒤로가기')
-
-        # event 
-        self.cancelButton.clicked.connect(lambda : eventHandler('userMenu_cancel'))
+        self.welcome_label = QLabel()
+        self.name_label = QLabel()
+        self.id_label = QLabel()
+        self.belong_label = QLabel()
+        self.temp_label = QLabel()
+        self.status_label = QLabel()
 
         # alignment
-        self.name.setAlignment(Qt.AlignCenter)
-        self.temp.setAlignment(Qt.AlignCenter)
-        self.status.setAlignment(Qt.AlignCenter)
+        self.welcome_label.setAlignment(Qt.AlignCenter)
+        self.box.setAlignment(Qt.AlignCenter)
+        self.status_label.setAlignment(Qt.AlignCenter)
 
         # style
-        labelStyle = "background: white; font-size: 25px; font-family: 맑은 고딕; border-width:3px; border-style:solid; border-color:black;"
-        self.name.setStyleSheet(labelStyle)
-        self.temp.setStyleSheet(labelStyle)
-        self.status.setStyleSheet(labelStyle)
+        self.setStyleSheet('background:white;')
+        self.welcome_label.setStyleSheet('font-size:25px; font-family:맑은 고딕;')
 
-        # add labels to box
-        self.box.addWidget(self.name)
-        self.box.addWidget(self.temp)
-        self.box.addWidget(self.status)
-        self.box.addWidget(self.cancelButton)
+        self.center_label_style = 'font-size:16px; font-family:맑은 고딕; padding-left:5em; '
+        self.name_label.setStyleSheet(self.center_label_style)
+        self.id_label.setStyleSheet(self.center_label_style)
+        self.belong_label.setStyleSheet(self.center_label_style)
+        self.temp_label.setStyleSheet(self.center_label_style)
 
+        self.status_label.setStyleSheet('font-size:20px; font-family:맑은 고딕; border:1px solid black;')
+
+
+        # add component
+        self.box.addWidget(QLabel()) # for spacing
+        self.box.addWidget(self.welcome_label)
+        self.box.addWidget(QLabel())
+        self.box.addWidget(self.name_label)
+        self.box.addWidget(self.id_label)
+        self.box.addWidget(self.belong_label)
+        self.box.addWidget(self.temp_label)
+        self.box.addWidget(QLabel())
+        self.box.addWidget(self.status_label)
+
+        self.resize(700,450)
+
+        # assemble
+        self.layout.addRow(self.header)
+        self.layout.addRow(self.box)
+
+    # name setter
     def setName(self, name):
-        self.name.setText(name)
+        self.name = name
+        if(self.name != None):
+            self.welcome_label.setText('환영합니다, '+ self.name + '님')
+            self.name_label.setText('이름 : ' + self.name)
     
-    def setTemp(self, temperature):
-        self.temp.setText(temperature)
-    
-    def setStatus(self, status):
-        self.status.setText(status)
+    # id setter
+    def setId(self, id):
+        self.id = id
+        if(self.id != None):
+            self.id_label.setText('ID : ' + self.id)
 
+    # belong setter
+    def setBelong(self, belong):
+        self.belong = belong
+        if(self.belong != None):
+            self.belong_label.setText('소속 : ' + self.belong)
+
+    # temp setter
+    def setTemp(self, temp):
+        self.temp = temp
+        if(self.temp != None):
+            self.temp_label.setText('체온 : ' + self.temp + '℃')
+
+    # status setter
+    def setStatus(self, status):
+        self.status = status
+        if(self.status != None):
+            self.status_label.setText(self.status)
+
+    # all class member variable init as ''
     def clear(self):
         self.setName('')
+        self.setId('')
+        self.setBelong('')
         self.setTemp('')
         self.setStatus('')
+
 
 '''
     ↓ AdminAdd Widget
@@ -375,7 +433,9 @@ class View(QWidget):
             else:
                 self.tempWidget.setName(item['name'])
                 self.tempWidget.setStatus('손목을 온도센서에 가까이 대주세요')
-                self.requestQ.put({'type':'GET_TEMP'})
+                self.tempWidget.header.setBackgroundColor(QColor(0,255,0), QColor(0,0,255))
+                self.changeWidget('tempWidget')
+                # self.requestQ.put({'type':'GET_TEMP'})
 
         elif(item['type'] == 'GET_TEMP'):
                 if(item['temp'] == 'INTERRUPTED'):
@@ -391,8 +451,6 @@ class View(QWidget):
             self.nfcWaitingWidget.setStatus()
             self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255),QColor(0,0,255))
             self.changeWidget('nfcWaitingWidget')
-            # self.tempWidget.clear()
-            # self.tempWidget.setStatus('NFC 카드를 대주세요.')
             self.requestQ.put({'type':'GET_NAME'})
 
         elif(item['type']=='GET_NFCID'):
@@ -428,7 +486,7 @@ class View(QWidget):
 
         self.initialWidget = InitialWidget(self.eventHandler)
         self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name':'userMenu'},{'menu_name':'관리 모드', 'menu_event_name':'adminMenu'}], self.eventHandler)
-        self.tempWidget = TempWidget(self.eventHandler)
+        self.tempWidget = TempWidget()
         self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd'}], self.eventHandler)
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
         self.nfcWaitingWidget = NFCWatingWidget([{'menu_name':'뒤로가기', 'menu_event_name':'userMenu_cancel'}], self.eventHandler)
@@ -452,7 +510,6 @@ class View(QWidget):
         self.widgetsList['nfcWaitingWidget'] = 5
 
         widget_laytout.addWidget(self.widgetStack)
-        # self.changeWidget('menuWidget')
         self.changeWidget('initialWidget')
 
     # move window to center point of display
@@ -475,11 +532,6 @@ class View(QWidget):
             self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
             self.changeWidget('nfcWaitingWidget')
             self.requestQ.put({'type':'GET_NAME'})
-
-            # self.tempWidget.clear()
-            # self.tempWidget.setStatus('NFC 카드를 대주세요.')
-            # self.changeWidget('tempWidget')
-            # self.requestQ.put({'type':'GET_NAME'})
 
         elif(kind == 'userMenu_cancel'):
             if(self.isReady.value == False): # if background is running
