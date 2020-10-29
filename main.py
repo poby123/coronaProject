@@ -1,12 +1,39 @@
 import sys, time
+from gtts import gTTS
 from multiprocessing import Process, Queue, Value
 from threading import Thread
+from pathlib import Path
 import RasberryController
 import DataController
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtMultimedia import *
+
+'''
+    ↓ TTS Class
+'''
+class TTS():
+    def __init__(self):
+        self.player = QMediaPlayer()
+    
+    def makeVoice(self, text): 
+        tts = gTTS(text=text, lang='ko')
+        tts.save("./resources/tts/"+text+".mp3")
+
+    def play(self, text):
+        my_file = Path("./resources/tts/"+text+'.mp3')  
+        
+        if (my_file.is_file() == False):
+            print('not exist')
+            self.makeVoice(text)
+
+        self.filename = text+'.mp3'
+        self.media = QUrl.fromLocalFile('./resources/tts/'+self.filename)
+        self.content = QMediaContent(self.media)
+        self.player.setMedia(self.content)
+        self.player.play()
 
 '''
     ↓ Header Widget
@@ -84,7 +111,7 @@ class InitialWidget(QGroupBox):
 
         # define label
         self.label = QLabel()
-        pixmap = QPixmap('./resources/logo_black.png').scaled(400, 400)
+        pixmap = QPixmap('./resources/img/logo_black.png').scaled(400, 400)
         self.label.setPixmap(pixmap)
         self.mousePressEvent = lambda e : self.eventHandler('init')
 
@@ -278,12 +305,12 @@ class TempWidget(QGroupBox):
 
     # all class member variable init as ''
     def clear(self):
+        self.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
         self.setName('')
         self.setId('')
         self.setBelong('')
         self.setTemp('')
         self.setStatus('')
-
 
 '''
     ↓ AdminAdd Widget
@@ -431,6 +458,8 @@ class View(QWidget):
         self.worker = Worker(self.responseQ)
         self.worker.new_signal.connect(self.responseHandler)
         self.worker.start()
+
+        self.tts = TTS()
     
     @pyqtSlot(dict)
     def responseHandler(self, item):
@@ -460,11 +489,14 @@ class View(QWidget):
                 if(item['temp'] > 37.5):
                     self.tempWidget.header.setBackgroundColor(QColor(255,0,0), QColor(0,176,80))
                     self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
+                    self.tts.play('체온이 높습니다')
                 else:
                     self.tempWidget.header.setBackgroundColor(QColor(0,0,255), QColor(0,176,80))
                     self.tempWidget.setStatus('정상 체온입니다.')
+                    self.tts.play('정상 체온입니다')
         
         elif(item['type'] == 'USER_RE_INIT'):
+            self.tempWidget.clear()
             self.nfcWaitingWidget.setStatus()
             self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255),QColor(0,0,255))
             self.changeWidget('nfcWaitingWidget')
@@ -634,6 +666,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
     requestQ = Queue()
     responseQ = Queue()
     interrupt = Value('b', False)
