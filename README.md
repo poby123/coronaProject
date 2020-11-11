@@ -1,5 +1,5 @@
 # ssuCoronaProject_Client
-## dependencies
+## Dependencies
 - GTTS (https://pypi.org/project/gTTS/)
 ```
 pip3 install gtts
