@@ -57,7 +57,7 @@ class HeaderWidget(QGroupBox):
         # set styles
         self.color1 = QColor(0,0,255)
         self.color2 = QColor(0,0,255)
-        self.header_label_style = 'font-size:28px; font-family:Arial; font-weight:bold; color: white; margin-top: 20px; margin-bottom:20px; padding: 10px 0px;'
+        self.header_label_style = 'font-size:28px; font-family:Arial; font-weight:bold; color: white; margin-top: 5px; margin-bottom:5px; padding: 5px 0px;'
         self.header_label.setStyleSheet(self.header_label_style)
         self.header_label.setAlignment(Qt.AlignRight)
 
@@ -111,8 +111,8 @@ class InitialWidget(QGroupBox):
 
         # define label
         self.label = QLabel()
-        pixmap = QPixmap('./resources/img/logo_black.png').scaled(400, 400)
-        self.label.setPixmap(pixmap)
+        self.pixmap = QPixmap('./resources/img/logo_black.png').scaled(400, 400)
+        self.label.setPixmap(self.pixmap)
         self.mousePressEvent = lambda e : self.eventHandler('init')
 
         # add Component
@@ -185,11 +185,28 @@ class NFCWatingWidget(QGroupBox):
         # style
         self_style = 'background: white;'
         self.setStyleSheet(self_style)
-        button_style = 'font-size: 20px; font-family:맑은 고딕; font-weight: bold; border-width:2px; border-style:solid; border-color:blue; padding: 5px 0;'
+        button_style = 'font-size: 20px; font-family:맑은 고딕; font-weight: bold; border: none; padding: 5px 0; color:blue;'
+        label_style = 'font-size: 25px; font-family:맑은 고딕; font-weight: bold; padding: 10px 0;'
 
         # define components
-        self.label = QLabel('하단의 리더기에 카드를 접촉해주십시오')
+        # - label for msg
+        self.label = QLabel('하단의 리더기에 카드를 접촉해주십시오.')
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setStyleSheet(label_style)
         self.gif_box.addWidget(self.label)
+
+        # - gif label
+        self.gif_label = QLabel()
+        self.gif_label.setAlignment(Qt.AlignCenter)
+
+        # - tagging_movie 
+        self.tagging_movie = QMovie('./resources/img/tagging.gif')
+        self.tagging_movie.setScaledSize(QSize(400, 200))
+        
+        # - tagging_movie attach to gif label
+        self.gif_label.setMovie(self.tagging_movie)
+        self.tagging_movie.start() #tagging.gif movie start
+        self.gif_box.addWidget(self.gif_label)
 
         for menu in (self.menus):
             btn = QPushButton(menu['menu_name'])
@@ -197,6 +214,7 @@ class NFCWatingWidget(QGroupBox):
             handler_name = menu['menu_event_name']
             btn.clicked.connect(lambda ch, handler_name=handler_name: self.eventHandler(handler_name))
             self.button_box.addWidget(btn)
+
 
     # set status message
     def setStatus(self, status=None):
@@ -621,7 +639,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
 
     while(True):
         time.sleep(1)
-        print('running')
+        # print('running')
         if(requestQ.qsize() > 0):
             item = requestQ.get()
             isReady.value = False #set flag false when working...
