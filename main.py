@@ -139,18 +139,15 @@ class MenuWidget(QGroupBox):
 
         self.layout.addRow(self.header)
         self.layout.addRow(self.box)
-        
-        buttonStyle = "height : 300px; \
-            border-width:5px; border-color:blue; border-radius: 10px; border-style:solid; \
-            background: white; \
-            font-size: 30px; font-weight: bold; font-family: 맑은 고딕;"
 
-        #define button
         for menu in (self.menus):
-            btn = QPushButton(menu['menu_name'])
-            btn.setStyleSheet(buttonStyle)
+            btn = QLabel(menu['menu_name'])
+            # btn.resize(300,300)
+            btn.setAlignment(Qt.AlignCenter)
+            pixmap = QPixmap(f"./resources/img/{menu['menu_image']}").scaled(300, 300)
+            btn.setPixmap(pixmap)
             handler_name = menu['menu_event_name']
-            btn.clicked.connect(lambda ch, handler_name=handler_name: self.eventHandler(handler_name))
+            btn.mousePressEvent = lambda ch, handler_name=handler_name: self.eventHandler(handler_name)
             self.box.addWidget(btn)
 
         #style
@@ -551,9 +548,9 @@ class View(QWidget):
         self.setLayout(widget_laytout)
 
         self.initialWidget = InitialWidget(self.eventHandler)
-        self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name':'userMenu'},{'menu_name':'관리 모드', 'menu_event_name':'adminMenu'}], self.eventHandler)
+        self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name':'userMenu', 'menu_image':'displaymode.png'},{'menu_name':'관리 모드', 'menu_event_name':'adminMenu','menu_image':'prefermode.png'}], self.eventHandler)
         self.tempWidget = TempWidget()
-        self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd'}], self.eventHandler)
+        self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd', 'menu_image':'add.png'}], self.eventHandler)
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
         self.nfcWaitingWidget = NFCWatingWidget([{'menu_name':'뒤로가기', 'menu_event_name':'userMenu_cancel'}], self.eventHandler)
 
