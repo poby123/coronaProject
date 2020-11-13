@@ -630,7 +630,7 @@ class View(QWidget):
 '''
 def Handler(requestQ, responseQ, interrupt, isReady):
     dataController = DataController.DataController(interrupt)
-    raspberryController = RaspberryController.RaspberryController
+    raspberryController = RaspberryController.RaspberryController(interrupt)
     id = None
     temp = None
     show_time = 4 #seconds
@@ -644,7 +644,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
 
             # Get nfc id and name
             if(item['type'] == 'GET_USER_INFO'):
-                id = raspberryController.getNFCId(interrupt) # for propagation interrupt signal
+                id = raspberryController.getNFCId() # for propagation interrupt signal
                 if(id == 'INTERRUPTED'):
                     responseQ.put({'type':'GET_USER_INFO', 'user_info':id})
                 else:
@@ -658,7 +658,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
             
             # Get temperature And Re init
             elif(item['type'] == 'GET_TEMP'):
-                temp = raspberryController.getTemp(interrupt) # for propagation interrupt signal
+                temp = raspberryController.getTemp() # for propagation interrupt signal
                 if(id != 'INTERRUPTED' and temp != 'INTERRUPTED'):
                     result = dataController.addTempData(id, temp)
                 responseQ.put({'type':'GET_TEMP', 'temp':temp})
@@ -666,7 +666,7 @@ def Handler(requestQ, responseQ, interrupt, isReady):
                 responseQ.put({'type':'USER_RE_INIT'})
 
             elif(item['type']=='GET_NFCID'):
-                id = raspberryController.getNFCId(interrupt) # for propagation interrupt signal
+                id = raspberryController.getNFCId() # for propagation interrupt signal
                 responseQ.put({'type':'GET_NFCID', 'nfcId':id})
 
             elif(item['type']=='ADD_USER'):

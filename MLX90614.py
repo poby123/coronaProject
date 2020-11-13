@@ -1,4 +1,6 @@
+# Code for MLX90614 temperature sensor
 import smbus
+import RPi.GPIO as GPIO
 from time import sleep
 class MLX90614():
 
@@ -21,7 +23,7 @@ class MLX90614():
 	MLX90614_ID4=0x3F
 
 	comm_retries = 5
-	comm_sleep_amount = 0.1
+	comm_sleep_amount = 1
 
 	def __init__(self, address=0x5a, bus_num=1):
 		self.bus_num = bus_num
@@ -57,7 +59,13 @@ class MLX90614():
 
 if __name__ == '__main__':
 	sensor = MLX90614()
-	while(True):
-		#print('temp1: ', sensor.get_amb_temp())
-		print('temp2: ', sensor.get_obj_temp())
-		sleep(1)
+	
+	try:
+		while(True):
+			#print('temp1: ', sensor.get_amb_temp())
+			print('temp2: ', sensor.get_obj_temp())
+			sleep(1)
+	except KeyboardInterrupt:
+		print('keyboard interrupt')
+#	finally:
+#		GPIO.cleanup()
