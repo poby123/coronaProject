@@ -1,9 +1,8 @@
 import smbus
 from time import sleep
-
 class MLX90614():
 
-	MLX90614_RAWIR1=0x04
+    MLX90614_RAWIR1=0x04
 	MLX90614_RAWIR2=0x05
 	MLX90614_TA=0x06
 	MLX90614_TOBJ1=0x07
@@ -36,12 +35,12 @@ class MLX90614():
 				return self.bus.read_word_data(self.address, reg_addr)
 			except IOError as e:
 				err = e
-                                                        #"Rate limiting" - sleeping to prevent problems with sensor
-                                                        #when requesting data too quickly
+                #"Rate limiting" - sleeping to prevent problems with sensor
+                #when requesting data too quickly
 				sleep(self.comm_sleep_amount)
-                                                        #By this time, we made a couple requests and the sensor didn't respond
-                                                        #(judging by the fact we haven't returned from this function yet)
-                                                        #So let's just re-raise the last IOError we got
+                #By this time, we made a couple requests and the sensor didn't respond
+                #(judging by the fact we haven't returned from this function yet)
+                #So let's just re-raise the last IOError we got
 				raise err
 
 	def data_to_temp(self, data):
