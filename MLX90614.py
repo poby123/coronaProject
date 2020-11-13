@@ -2,7 +2,7 @@ import smbus
 from time import sleep
 class MLX90614():
 
-    MLX90614_RAWIR1=0x04
+	MLX90614_RAWIR1=0x04
 	MLX90614_RAWIR2=0x05
 	MLX90614_TA=0x06
 	MLX90614_TOBJ1=0x07
