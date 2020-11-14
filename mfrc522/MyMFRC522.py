@@ -27,11 +27,10 @@ class MyMFRC522:
 
   def read_id(self):
       id = self.read_id_no_block()
-      wait_time = 5
-      for i in range(wait_time):
+      while(True):
           if(id != None):
               return id
-          time.sleep(1)
+          time.sleep(0.2)
           if(self.interrupt.value):
               return 'INTERRUPTED'
           id = self.read_id_no_block()

@@ -23,7 +23,7 @@ class MLX90614():
 	MLX90614_ID4=0x3F
 
 	comm_retries = 5
-	comm_sleep_amount = 1
+	comm_sleep_amount = 0.1
 
 	def __init__(self, address=0x5a, bus_num=1):
 		self.bus_num = bus_num

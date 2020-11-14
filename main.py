@@ -461,7 +461,7 @@ class View(QWidget):
         self.isReady = isReady
 
         # window initialize
-        self.resize(700,450)
+        self.resize(650,400)
         self.widgetsList = {}
         self.widgetStack = QStackedWidget(self)
         self.init_widget()
