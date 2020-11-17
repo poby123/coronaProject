@@ -47,6 +47,7 @@ class MLX90614():
 
 	def data_to_temp(self, data):
 		temp = (data*0.02) - 273.15
+		temp += -0.7*(temp-38)
 		return temp
 
 	def get_amb_temp(self):
