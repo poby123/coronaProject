@@ -14,7 +14,7 @@
 ```
 - PyQt5.QtMultimedia
 ```
-~$ sudo apt-get install -y python-pyqt5.qtmultimedia
+~$ sudo apt-get install -y python3-pyqt5.qtmultimedia
 ```
 
 ## Usage
