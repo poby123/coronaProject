@@ -1,4 +1,5 @@
-import sys, time
+import sys
+import time
 from gtts import gTTS
 from multiprocessing import Process, Queue, Value
 from threading import Thread
@@ -14,17 +15,19 @@ from PyQt5.QtMultimedia import *
 '''
     ↓ TTS Class
 '''
+
+
 class TTS():
     def __init__(self):
         self.player = QMediaPlayer()
-    
-    def makeVoice(self, text): 
+
+    def makeVoice(self, text):
         tts = gTTS(text=text, lang='ko')
         tts.save("./resources/tts/"+text+".mp3")
 
     def play(self, text):
-        my_file = Path("./resources/tts/"+text+'.mp3')  
-        
+        my_file = Path("./resources/tts/"+text+'.mp3')
+
         if (my_file.is_file() == False):
             print('not exist')
             self.makeVoice(text)
@@ -35,9 +38,12 @@ class TTS():
         self.player.setMedia(self.content)
         self.player.play()
 
+
 '''
     ↓ Header Widget
 '''
+
+
 class HeaderWidget(QGroupBox):
     def __init__(self):
         QGroupBox.__init__(self)
@@ -45,25 +51,27 @@ class HeaderWidget(QGroupBox):
 
     def init_widget(self):
         # define layout
-        self.header_layout = QHBoxLayout() # Header 부분을 이룰 QHBoxLayout 이다.
+        self.header_layout = QHBoxLayout()  # Header 부분을 이룰 QHBoxLayout 이다.
         self.setLayout(self.header_layout)
 
         # define label
         self.header_label = QLabel("SSU CORONA PROJECT")
 
         # add components
-        self.header_layout.addWidget(self.header_label) #header 레이아웃에 라벨을 달아준다.
+        # header 레이아웃에 라벨을 달아준다.
+        self.header_layout.addWidget(self.header_label)
 
         # set styles
-        self.color1 = QColor(0,0,255)
-        self.color2 = QColor(0,0,255)
+        self.color1 = QColor(0, 0, 255)
+        self.color2 = QColor(0, 0, 255)
         self.header_label_style = 'font-size:28px; font-family:Arial; font-weight:bold; color: white; margin-top: 5px; margin-bottom:5px; padding: 5px 0px;'
         self.header_label.setStyleSheet(self.header_label_style)
         self.header_label.setAlignment(Qt.AlignRight)
 
-        #set animation
-        self.animation = QVariantAnimation(self, valueChanged=self.animate, startValue=0.00001, endValue=1.0, duration=1000)
-        
+        # set animation
+        self.animation = QVariantAnimation(
+            self, valueChanged=self.animate, startValue=0.00001, endValue=1.0, duration=1000)
+
         # set background color
         self.setBackgroundColor()
 
@@ -78,24 +86,27 @@ class HeaderWidget(QGroupBox):
         self.animation.setDirection(QAbstractAnimation.Forward)
         self.animation.start()
 
-    #color must be QColor(r,g,b) type
-    def setBackgroundColor(self,color1=None, color2=None):
+    # color must be QColor(r,g,b) type
+    def setBackgroundColor(self, color1=None, color2=None):
         if(color1 != None):
             self.color1 = color1
         if(color2 != None):
             self.color2 = color2
         self.animationStart()
 
+
 '''
     ↓ Initial Widget
 '''
+
+
 class InitialWidget(QGroupBox):
     def __init__(self, eventHandler):
         super().__init__()
         self.eventHandler = eventHandler
 
         self.init_widget()
-    
+
     def init_widget(self):
         self.layout = QFormLayout()
         self.setLayout(self.layout)
@@ -111,23 +122,27 @@ class InitialWidget(QGroupBox):
 
         # define label
         self.label = QLabel()
-        self.pixmap = QPixmap('./resources/img/logo_black.png').scaled(400, 400)
+        self.pixmap = QPixmap(
+            './resources/img/logo_black.png').scaled(400, 400)
         self.label.setPixmap(self.pixmap)
-        self.mousePressEvent = lambda e : self.eventHandler('init')
+        self.mousePressEvent = lambda e: self.eventHandler('init')
 
         # add Component
         self.box.addWidget(self.label)
 
+
 '''
     ↓ Menu Widget
 '''
+
+
 class MenuWidget(QGroupBox):
-    def __init__(self, menus, eventHandler):
+    def __init__(self, menus, eventHandler, etc_button_event_name=None):
         super().__init__()
 
         self.menus = menus
         self.eventHandler = eventHandler
-
+        self.etc_button_event_name = etc_button_event_name
         self.init_widget()
 
     def init_widget(self):
@@ -144,20 +159,31 @@ class MenuWidget(QGroupBox):
             btn = QLabel(menu['menu_name'])
             # btn.resize(300,300)
             btn.setAlignment(Qt.AlignCenter)
-            pixmap = QPixmap(f"./resources/img/{menu['menu_image']}").scaled(300, 300)
+            pixmap = QPixmap(
+                f"./resources/img/{menu['menu_image']}").scaled(300, 300)
             btn.setPixmap(pixmap)
             handler_name = menu['menu_event_name']
-            btn.mousePressEvent = lambda ch, handler_name=handler_name: self.eventHandler(handler_name)
+            btn.mousePressEvent = lambda ch, handler_name=handler_name: self.eventHandler(
+                handler_name)
             self.box.addWidget(btn)
 
-        #style
+        if(self.etc_button_event_name != None):
+            self.cancel_button = QPushButton('뒤로 가기')
+            self.cancel_button.setStyleSheet(
+                'font-size: 20px; font-family:맑은 고딕; font-weight: bold; border: none; padding: 5px 0; color:blue;')
+            self.cancel_button.clicked.connect(
+                lambda ch, handler_name=self.etc_button_event_name: self.eventHandler(handler_name))
+            self.layout.addRow(self.cancel_button)
+        # style
         self.setStyleSheet("background: white;")
-        self.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
+        self.header.setBackgroundColor(QColor(0, 0, 255), QColor(0, 0, 255))
 
 
 '''
     ↓ NFC Wating Widget
 '''
+
+
 class NFCWatingWidget(QGroupBox):
     def __init__(self, menus, eventHandler):
         super().__init__()
@@ -165,7 +191,7 @@ class NFCWatingWidget(QGroupBox):
         self.eventHandler = eventHandler
 
         self.init_widget()
-    
+
     def init_widget(self):
         # define layout
         self.layout = QFormLayout()
@@ -196,33 +222,37 @@ class NFCWatingWidget(QGroupBox):
         self.gif_label = QLabel()
         self.gif_label.setAlignment(Qt.AlignCenter)
 
-        # - tagging_movie 
+        # - tagging_movie
         self.tagging_movie = QMovie('./resources/img/tagging.gif')
         self.tagging_movie.setScaledSize(QSize(400, 200))
-        
+
         # - tagging_movie attach to gif label
         self.gif_label.setMovie(self.tagging_movie)
-        self.tagging_movie.start() #tagging.gif movie start
+        self.tagging_movie.start()  # tagging.gif movie start
         self.gif_box.addWidget(self.gif_label)
 
         for menu in (self.menus):
             btn = QPushButton(menu['menu_name'])
             btn.setStyleSheet(button_style)
             handler_name = menu['menu_event_name']
-            btn.clicked.connect(lambda ch, handler_name=handler_name: self.eventHandler(handler_name))
+            btn.clicked.connect(
+                lambda ch, handler_name=handler_name: self.eventHandler(handler_name))
             self.button_box.addWidget(btn)
 
-
     # set status message
+
     def setStatus(self, status=None):
         if(status == None):
             self.label.setText('하단의 리더기에 카드를 접촉해주십시오')
-        else:    
+        else:
             self.label.setText(status)
+
 
 '''
     ↓ TempWidget
 '''
+
+
 class TempWidget(QGroupBox):
     def __init__(self):
         super().__init__()
@@ -267,18 +297,18 @@ class TempWidget(QGroupBox):
         self.belong_label.setStyleSheet(self.center_label_style)
         self.temp_label.setStyleSheet(self.center_label_style)
 
-        self.status_label.setStyleSheet('font-size:20px; font-family:맑은 고딕; border:1px solid black;')
-
+        self.status_label.setStyleSheet(
+            'font-size:20px; font-family:맑은 고딕; border:1px solid black;')
 
         # add component
-        self.box.addWidget(QLabel()) # for spacing
+        self.box.addWidget(QLabel())  # for spacing
         self.box.addWidget(self.name_label)
         self.box.addWidget(self.id_label)
         self.box.addWidget(self.belong_label)
         self.box.addWidget(self.temp_label)
         self.box.addWidget(QLabel())
 
-        self.resize(700,450)
+        self.resize(700, 450)
 
         # assemble
         self.layout.addRow(self.header)
@@ -290,9 +320,9 @@ class TempWidget(QGroupBox):
     def setName(self, name):
         self.name = name
         if(self.name != None):
-            self.welcome_label.setText('환영합니다, '+ self.name + '님')
+            self.welcome_label.setText('환영합니다, ' + self.name + '님')
             self.name_label.setText('이름 : ' + self.name)
-    
+
     # id setter
     def setId(self, id):
         self.id = id
@@ -319,16 +349,19 @@ class TempWidget(QGroupBox):
 
     # all class member variable init as ''
     def clear(self):
-        self.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
+        self.header.setBackgroundColor(QColor(0, 0, 255), QColor(0, 0, 255))
         self.setName('')
         self.setId('')
         self.setBelong('')
         self.setTemp('')
         self.setStatus('')
 
+
 '''
     ↓ AdminAdd Widget
 '''
+
+
 class AdminAddWidget(QGroupBox):
     def __init__(self, eventHandler):
         QGroupBox.__init__(self)
@@ -354,8 +387,10 @@ class AdminAddWidget(QGroupBox):
         horizonLayout.addWidget(self.addButton)
 
         # event handle
-        self.cancelButton.clicked.connect(lambda :eventHandler('adminAdd_cancel'))
-        self.addButton.clicked.connect(lambda : eventHandler('adminAdd_add', self.getElements()))
+        self.cancelButton.clicked.connect(
+            lambda: eventHandler('adminAdd_cancel'))
+        self.addButton.clicked.connect(
+            lambda: eventHandler('adminAdd_add', self.getElements()))
 
         # define style
         self.box.setContentsMargins(40, 100, 40, 0)
@@ -380,7 +415,7 @@ class AdminAddWidget(QGroupBox):
         self.belongEditor.setStyleSheet(editorStyle)
         self.idEditor.setStyleSheet(editorStyle)
 
-        #button style
+        # button style
         self.cancelButton.setStyleSheet(buttonStyle)
         self.addButton.setStyleSheet(buttonStyle)
 
@@ -428,11 +463,13 @@ class AdminAddWidget(QGroupBox):
         self.setBelong('')
         self.setId('')
         self.setStatus('')
-    
+
 
 '''
     ↓ Thread Worker Class
 '''
+
+
 class Worker(QThread):
     new_signal = pyqtSignal(dict)
 
@@ -443,13 +480,16 @@ class Worker(QThread):
     def run(self):
         while(True):
             time.sleep(1)
-            if(self.responseQ.qsize()>0):
+            if(self.responseQ.qsize() > 0):
                 item = self.responseQ.get()
                 self.new_signal.emit(item)
+
 
 '''
     ↓ Widgets Controller
 '''
+
+
 class View(QWidget):
     def __init__(self, requestQ, responseQ, interrupt, isReady):
         QWidget.__init__(self, flags=Qt.Widget)
@@ -461,7 +501,7 @@ class View(QWidget):
         self.isReady = isReady
 
         # window initialize
-        self.resize(650,400)
+        self.resize(650, 400)
         self.widgetsList = {}
         self.widgetStack = QStackedWidget(self)
         self.init_widget()
@@ -474,15 +514,16 @@ class View(QWidget):
         self.worker.start()
 
         self.tts = TTS()
-    
+
     @pyqtSlot(dict)
     def responseHandler(self, item):
         if(item['type'] == 'GET_USER_INFO'):
             if(item['user_info'] == None):
                 self.nfcWaitingWidget.setStatus('저장돼있지 않은 카드입니다')
-                self.nfcWaitingWidget.header.setBackgroundColor(QColor(255,0,0), QColor(0,0,255))
+                self.nfcWaitingWidget.header.setBackgroundColor(
+                    QColor(255, 0, 0), QColor(0, 0, 255))
             elif(item['user_info'] == 'INTERRUPTED'):
-                self.interrupt.value = False # set interrupt as False
+                self.interrupt.value = False  # set interrupt as False
                 return
             else:
                 user_info = item['user_info']
@@ -491,78 +532,85 @@ class View(QWidget):
                 if(user_info['id'] != None):
                     self.tempWidget.setId(user_info['id'])
                 self.tempWidget.setStatus('손목을 온도센서에 가까이 대주세요')
-                self.tempWidget.header.setBackgroundColor(QColor(0,176,80), QColor(0,0,255))
+                self.tempWidget.header.setBackgroundColor(
+                    QColor(0, 176, 80), QColor(0, 0, 255))
                 self.changeWidget('tempWidget')
-                self.requestQ.put({'type':'GET_TEMP'})
+                self.requestQ.put({'type': 'GET_TEMP'})
 
         elif(item['type'] == 'GET_TEMP'):
-                if(item['temp'] == 'INTERRUPTED'):
-                    self.interrupt.value = False # set interrupt as False
-                    return
-                self.tempWidget.setTemp(str(item['temp']))
-                if(item['temp'] > 37.5):
-                    self.tempWidget.header.setBackgroundColor(QColor(255,0,0), QColor(0,176,80))
-                    self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
-                    self.tts.play('체온이 높습니다')
-                else:
-                    self.tempWidget.header.setBackgroundColor(QColor(0,0,255), QColor(0,176,80))
-                    self.tempWidget.setStatus('정상 체온입니다.')
-                    self.tts.play('정상 체온입니다')
-        
+            if(item['temp'] == 'INTERRUPTED'):
+                self.interrupt.value = False  # set interrupt as False
+                return
+            self.tempWidget.setTemp(str(item['temp']))
+            if(item['temp'] > 37.5):
+                self.tempWidget.header.setBackgroundColor(
+                    QColor(255, 0, 0), QColor(0, 176, 80))
+                self.tempWidget.setStatus('체온이 높습니다. 보건실에 방문해주세요.')
+                self.tts.play('체온이 높습니다')
+            else:
+                self.tempWidget.header.setBackgroundColor(
+                    QColor(0, 0, 255), QColor(0, 176, 80))
+                self.tempWidget.setStatus('정상 체온입니다.')
+                self.tts.play('정상 체온입니다')
+
         elif(item['type'] == 'USER_RE_INIT'):
             self.tempWidget.clear()
             self.nfcWaitingWidget.setStatus()
-            self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255),QColor(0,0,255))
+            self.nfcWaitingWidget.header.setBackgroundColor(
+                QColor(0, 0, 255), QColor(0, 0, 255))
             self.changeWidget('nfcWaitingWidget')
-            self.requestQ.put({'type':'GET_USER_INFO'})
+            self.requestQ.put({'type': 'GET_USER_INFO'})
 
-        elif(item['type']=='GET_NFCID'):
+        elif(item['type'] == 'GET_NFCID'):
             id = item['nfcId']
             if(id == None):
                 self.adminAddWidget.setStatus('NFC 카드를 인식하지 못했습니다.')
             elif(id == 'INTERRUPTED'):
-                self.interrupt.value = False # set interrupt as False
+                self.interrupt.value = False  # set interrupt as False
                 return
             else:
                 self.adminAddWidget.setNFCID(id)
                 self.adminAddWidget.setStatus('NFC 카드 인식에 성공했습니다.')
 
-        elif(item['type']=='ADD_USER'):
+        elif(item['type'] == 'ADD_USER'):
             if(item['result']):
                 self.adminAddWidget.setStatus('저장에 성공했습니다')
             else:
                 self.adminAddWidget.setStatus('저장에 실패했습니다')
-            self.interrupt.value = False # set interrupt as False
+            self.interrupt.value = False  # set interrupt as False
 
-        elif(item['type']=='GET_USER_LIST'):
+        elif(item['type'] == 'GET_USER_LIST'):
             data = item['result']
             self.adminDeleteWidget.setData(data)
             self.adminDeleteWidget.setStatus('표를 가져왔습니다.')
-            self.interrupt.value = False # set interrupt as False
-        
+            self.interrupt.value = False  # set interrupt as False
 
     # init widget
+
     def init_widget(self):
         self.setWindowTitle("IoT 체온 스캐너")
         widget_laytout = QBoxLayout(QBoxLayout.LeftToRight)
         self.setLayout(widget_laytout)
 
         self.initialWidget = InitialWidget(self.eventHandler)
-        self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name':'userMenu', 'menu_image':'displaymode.png'},{'menu_name':'관리 모드', 'menu_event_name':'adminMenu','menu_image':'prefermode.png'}], self.eventHandler)
+        self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name': 'userMenu', 'menu_image': 'displaymode.png'}, {
+                                     'menu_name': '관리 모드', 'menu_event_name': 'adminMenu', 'menu_image': 'prefermode.png'}], self.eventHandler)
         self.tempWidget = TempWidget()
-        self.adminMenuWidget = MenuWidget([{'menu_name':'멤버 추가', 'menu_event_name':'adminAdd', 'menu_image':'add.png'}], self.eventHandler)
+        self.adminMenuWidget = MenuWidget(
+            [{'menu_name': '멤버 추가', 'menu_event_name': 'adminAdd', 'menu_image': 'add.png'}], self.eventHandler, 'adminMenu_cancel')
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
-        self.nfcWaitingWidget = NFCWatingWidget([{'menu_name':'뒤로가기', 'menu_event_name':'userMenu_cancel'}], self.eventHandler)
+        self.nfcWaitingWidget = NFCWatingWidget(
+            [{'menu_name': '뒤로가기', 'menu_event_name': 'userMenu_cancel'}], self.eventHandler)
 
         self.widgetStack.addWidget(self.initialWidget)
         self.widgetsList['initialWidget'] = 0
 
         self.widgetStack.addWidget(self.menuWidget)
         self.widgetsList['menuWidget'] = 1
-        
+
         self.widgetStack.addWidget(self.tempWidget)
         self.widgetsList['tempWidget'] = 2
-        
+
         self.widgetStack.addWidget(self.adminMenuWidget)
         self.widgetsList['adminMenuWidget'] = 3
 
@@ -592,92 +640,102 @@ class View(QWidget):
             self.changeWidget('menuWidget')
 
         elif(kind == 'userMenu'):
-            self.nfcWaitingWidget.header.setBackgroundColor(QColor(0,0,255), QColor(0,0,255))
+            self.nfcWaitingWidget.header.setBackgroundColor(
+                QColor(0, 0, 255), QColor(0, 0, 255))
             self.changeWidget('nfcWaitingWidget')
-            self.requestQ.put({'type':'GET_USER_INFO'})
+            self.requestQ.put({'type': 'GET_USER_INFO'})
 
         elif(kind == 'userMenu_cancel'):
-            if(self.isReady.value == False): # if background is running
-                self.interrupt.value = True # interrupt signal
-                while(self.isReady.value == False): # wait
+            if(self.isReady.value == False):  # if background is running
+                self.interrupt.value = True  # interrupt signal
+                while(self.isReady.value == False):  # wait
                     time.sleep(0.2)
             self.changeWidget('menuWidget')
 
         elif(kind == 'adminMenu'):
             self.changeWidget('adminMenuWidget')
-        
+
+        elif(kind == 'adminMenu_cancel'):
+            self.changeWidget('menuWidget')
+
         elif(kind == 'adminAdd'):
             self.adminAddWidget.clear()
             self.adminAddWidget.setStatus('NFC 카드를 대주세요.')
             self.changeWidget('adminAddWidget')
-            self.requestQ.put({'type':'GET_NFCID'})
-        
+            self.requestQ.put({'type': 'GET_NFCID'})
+
         elif(kind == 'adminAdd_cancel'):
-            if(self.isReady.value == False): # if background is running
-                self.interrupt.value = True # interrupt signal
-                while(self.isReady.value == False): # wait
+            if(self.isReady.value == False):  # if background is running
+                self.interrupt.value = True  # interrupt signal
+                while(self.isReady.value == False):  # wait
                     time.sleep(0.2)
             self.adminAddWidget.clear()
             self.adminAddWidget.setStatus('')
             self.changeWidget('adminMenuWidget')
-        
+
         elif(kind == 'adminAdd_add'):
             self.adminAddWidget.setStatus('처리중입니다.')
-            self.requestQ.put({'type':'ADD_USER', 'nfcId':params['nfcId'], 'name':params['name'], 'belong':params['belong'], 'id':params['id']})
+            self.requestQ.put(
+                {'type': 'ADD_USER', 'nfcId': params['nfcId'], 'name': params['name'], 'belong': params['belong'], 'id': params['id']})
+
 
 '''
     ↓ Handler Function for Background Process
 '''
+
+
 def Handler(requestQ, responseQ, interrupt, isReady):
     dataController = DataController.DataController(interrupt)
     raspberryController = RaspberryController.RaspberryController(interrupt)
     id = None
     temp = None
-    show_time = 4 #seconds
+    show_time = 4  # seconds
 
     while(True):
         time.sleep(1)
         # print('running')
         if(requestQ.qsize() > 0):
             item = requestQ.get()
-            isReady.value = False #set flag false when working...
+            isReady.value = False  # set flag false when working...
 
             # Get nfc id and name
             if(item['type'] == 'GET_USER_INFO'):
-                id = raspberryController.getNFCId() # for propagation interrupt signal
+                id = raspberryController.getNFCId()  # for propagation interrupt signal
                 if(id == 'INTERRUPTED'):
-                    responseQ.put({'type':'GET_USER_INFO', 'user_info':id})
+                    responseQ.put({'type': 'GET_USER_INFO', 'user_info': id})
                 else:
                     user_info = dataController.getUserDataByNFC(id)
                     if(interrupt.value != True):
-                        responseQ.put({'type':'GET_USER_INFO', 'user_info':user_info})
+                        responseQ.put(
+                            {'type': 'GET_USER_INFO', 'user_info': user_info})
                     # print(user_info)
                     if(user_info == None):
                         time.sleep(show_time)
-                        responseQ.put({'type':'USER_RE_INIT'})
-            
+                        responseQ.put({'type': 'USER_RE_INIT'})
+
             # Get temperature And Re init
             elif(item['type'] == 'GET_TEMP'):
-                temp = raspberryController.getTemp() # for propagation interrupt signal
+                temp = raspberryController.getTemp()  # for propagation interrupt signal
                 if(id != 'INTERRUPTED' and temp != 'INTERRUPTED'):
                     result = dataController.addTempData(id, temp)
-                responseQ.put({'type':'GET_TEMP', 'temp':temp})
+                responseQ.put({'type': 'GET_TEMP', 'temp': temp})
                 time.sleep(show_time)
-                responseQ.put({'type':'USER_RE_INIT'})
+                responseQ.put({'type': 'USER_RE_INIT'})
 
-            elif(item['type']=='GET_NFCID'):
-                id = raspberryController.getNFCId() # for propagation interrupt signal
-                responseQ.put({'type':'GET_NFCID', 'nfcId':id})
+            elif(item['type'] == 'GET_NFCID'):
+                id = raspberryController.getNFCId()  # for propagation interrupt signal
+                responseQ.put({'type': 'GET_NFCID', 'nfcId': id})
 
-            elif(item['type']=='ADD_USER'):
-                result = dataController.addUser(item['nfcId'], item['name'], item['belong'], item['id'])
-                responseQ.put({'type':'ADD_USER', 'result':result})
+            elif(item['type'] == 'ADD_USER'):
+                result = dataController.addUser(
+                    item['nfcId'], item['name'], item['belong'], item['id'])
+                responseQ.put({'type': 'ADD_USER', 'result': result})
 
-            elif(item['type']=='GET_USER_LIST'):
+            elif(item['type'] == 'GET_USER_LIST'):
                 result = dataController.getUserData()
-                responseQ.put({'type':'GET_USER_LIST', 'result':result})
-        
-            isReady.value = True # set flag true when ready
+                responseQ.put({'type': 'GET_USER_LIST', 'result': result})
+
+            isReady.value = True  # set flag true when ready
 
 
 if __name__ == "__main__":
@@ -689,7 +747,8 @@ if __name__ == "__main__":
     isReady = Value('b', True)
     view = View(requestQ, responseQ, interrupt, isReady)
 
-    background = Process(target=Handler, args=(requestQ, responseQ, interrupt, isReady), daemon=True)
+    background = Process(target=Handler, args=(
+        requestQ, responseQ, interrupt, isReady), daemon=True)
     background.start()
 
     exit(app.exec_())
