@@ -358,6 +358,85 @@ class TempWidget(QGroupBox):
 
 
 '''
+    ↓ Login Widget
+'''
+
+
+class LoginWidget(QGroupBox):
+    def __init__(self, eventHandler):
+        QGroupBox.__init__(self)
+        self.box = QFormLayout()
+        self.setLayout(self.box)
+
+        # define widgets
+        self.titleLabel = QLabel('관리자 로그인')
+        self.idLabel = QLabel('ID : ')
+        self.idEditor = QLineEdit()
+        self.passwordLabel = QLabel('PW : ')
+        self.passwordEditor = QLineEdit()
+        self.statusLabel = QLabel('')
+
+        self.cancelButton = QPushButton('뒤로가기')
+        self.addButton = QPushButton('로그인')
+        horizonLayout = QHBoxLayout()
+        horizonLayout.addWidget(self.cancelButton)
+        horizonLayout.addWidget(self.addButton)
+
+        # event handle
+        self.cancelButton.clicked.connect(lambda: eventHandler('login_cancel'))
+        self.addButton.clicked.connect(
+            lambda: eventHandler('login_add', self.getElements()))
+
+        # self.box.setContentsMargins(40, 100, 40, 0)
+        labelStyle = "font-size:20px;font-family: 맑은 고딕;"
+        titleStyle = 'font-size:25px;font-family: 맑은 고딕;font-weight:bold;margin-top:10px;margin-bottom:60px;'
+        statusLabelStyle = labelStyle + "height:30px;"
+        editorStyle = "font-size:20px;font-family: 맑은 고딕;"
+        buttonStyle = "margin-top:90px; height: 50px; font-size:20px; font-family: 맑은 고딕;"
+
+        # label style
+        self.titleLabel.setStyleSheet(titleStyle)
+        self.titleLabel.setAlignment(Qt.AlignCenter)
+        self.idLabel.setStyleSheet(labelStyle)
+        self.passwordLabel.setStyleSheet(labelStyle)
+
+        # status label style
+        self.statusLabel.setAlignment(Qt.AlignCenter)
+        self.statusLabel.setStyleSheet(statusLabelStyle)
+
+        # editor style
+        self.idEditor.setStyleSheet(editorStyle)
+        self.passwordEditor.setStyleSheet(editorStyle)
+
+        # button style
+        self.cancelButton.setStyleSheet(buttonStyle)
+        self.addButton.setStyleSheet(buttonStyle)
+
+        # add widgets to box
+        self.box.addRow(self.titleLabel)
+        self.box.addRow(self.idLabel, self.idEditor)
+        self.box.addRow(self.passwordLabel, self.passwordEditor)
+        self.box.addRow(horizonLayout)
+        self.box.addRow(self.statusLabel)
+
+    def setStatus(self, text):
+        self.statusLabel.setText(str(text))
+
+    def setId(self, id):
+        self.idEditor.setText(str(id))
+
+    def setPassword(self, password):
+        self.passwordEditor.setText(str(password))
+
+    def getElements(self):
+        target = {}
+        target['id'] = self.idEditor.text()
+        target['password'] = self.passwordEditor.text()
+        print('in getElements 431:', target)
+        return target
+
+
+'''
     ↓ AdminAdd Widget
 '''
 
@@ -515,7 +594,7 @@ class View(QWidget):
 
         self.tts = TTS()
 
-    @pyqtSlot(dict)
+    @ pyqtSlot(dict)
     def responseHandler(self, item):
         if(item['type'] == 'GET_USER_INFO'):
             if(item['user_info'] == None):
@@ -572,6 +651,14 @@ class View(QWidget):
                 self.adminAddWidget.setNFCID(id)
                 self.adminAddWidget.setStatus('NFC 카드 인식에 성공했습니다.')
 
+        elif(item['type'] == 'LOGIN_ADD'):
+            result = item['result']
+            if(result == True):
+                self.changeWidget('adminMenuWidget')
+            else:
+                self.loginWidget.setStatus('로그인에 실패했습니다.')
+                self.loginWidget.setPassword('')
+
         elif(item['type'] == 'ADD_USER'):
             if(item['result']):
                 self.adminAddWidget.setStatus('저장에 성공했습니다')
@@ -594,8 +681,9 @@ class View(QWidget):
 
         self.initialWidget = InitialWidget(self.eventHandler)
         self.menuWidget = MenuWidget([{'menu_name': '디스플레이 모드', 'menu_event_name': 'userMenu', 'menu_image': 'displaymode.png'}, {
-                                     'menu_name': '관리 모드', 'menu_event_name': 'adminMenu', 'menu_image': 'prefermode.png'}], self.eventHandler)
+            'menu_name': '관리 모드', 'menu_event_name': 'adminMenu', 'menu_image': 'prefermode.png'}], self.eventHandler)
         self.tempWidget = TempWidget()
+        self.loginWidget = LoginWidget(self.eventHandler)
         self.adminMenuWidget = MenuWidget(
             [{'menu_name': '멤버 추가', 'menu_event_name': 'adminAdd', 'menu_image': 'add.png'}], self.eventHandler, 'adminMenu_cancel')
         self.adminAddWidget = AdminAddWidget(self.eventHandler)
@@ -619,6 +707,9 @@ class View(QWidget):
 
         self.widgetStack.addWidget(self.nfcWaitingWidget)
         self.widgetsList['nfcWaitingWidget'] = 5
+
+        self.widgetStack.addWidget(self.loginWidget)
+        self.widgetsList['loginWidget'] = 6
 
         widget_laytout.addWidget(self.widgetStack)
         self.changeWidget('initialWidget')
@@ -653,9 +744,22 @@ class View(QWidget):
             self.changeWidget('menuWidget')
 
         elif(kind == 'adminMenu'):
-            self.changeWidget('adminMenuWidget')
+            self.loginWidget.setId('')
+            self.loginWidget.setPassword('')
+            self.loginWidget.setStatus('')
+            self.changeWidget('loginWidget')
+
+        elif(kind == 'login_add'):
+            # print(params)
+            self.loginWidget.setStatus('로그인 중입니다...')
+            self.requestQ.put(
+                {'type': 'LOGIN_ADD', 'id': params['id'], 'password': params['password']})
+
+        elif(kind == 'login_cancel'):
+            self.changeWidget('menuWidget')
 
         elif(kind == 'adminMenu_cancel'):
+            self.requestQ.put({'type': 'LOGOUT'})
             self.changeWidget('menuWidget')
 
         elif(kind == 'adminAdd'):
@@ -734,6 +838,15 @@ def Handler(requestQ, responseQ, interrupt, isReady):
             elif(item['type'] == 'GET_USER_LIST'):
                 result = dataController.getUserData()
                 responseQ.put({'type': 'GET_USER_LIST', 'result': result})
+
+            elif(item['type'] == 'LOGIN_ADD'):
+                print(item['id'], ' ', item['password'])
+                result = dataController.login(item['id'], item['password'])
+                print('login result in handler:', result)
+                responseQ.put({'type': 'LOGIN_ADD', 'result': result})
+
+            elif(item['type'] == 'LOGOUT'):
+                dataController.logout()
 
             isReady.value = True  # set flag true when ready
 
