@@ -432,7 +432,7 @@ class LoginWidget(QGroupBox):
         target = {}
         target['id'] = self.idEditor.text()
         target['password'] = self.passwordEditor.text()
-        print('in getElements 431:', target)
+        # print('in getElements 431:', target)
         return target
 
 
@@ -840,9 +840,9 @@ def Handler(requestQ, responseQ, interrupt, isReady):
                 responseQ.put({'type': 'GET_USER_LIST', 'result': result})
 
             elif(item['type'] == 'LOGIN_ADD'):
-                print(item['id'], ' ', item['password'])
+                # print(item['id'], ' ', item['password'])
                 result = dataController.login(item['id'], item['password'])
-                print('login result in handler:', result)
+                # print('login result in handler:', result)
                 responseQ.put({'type': 'LOGIN_ADD', 'result': result})
 
             elif(item['type'] == 'LOGOUT'):
