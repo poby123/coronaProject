@@ -10,7 +10,9 @@ class RaspberryController():
     def __init__(self, interrupt):
         self.nfc_reader = MyMFRC522(interrupt)
         self.interrupt = interrupt
-        self.ultra = Ultra()
+        gpio.setmode(gpio.BCM)
+        gpio.setup(trig, gpio.OUT)
+        gpio.setup(echo, gpio.IN)
 
     def __del__(self):
         GPIO.cleanup()
@@ -26,7 +28,7 @@ class RaspberryController():
         temp_sensor = MLX90614.MLX90614()
         total = 0
         n = 4
-        while(self.ultra.getDistance() >= 8.0):
+        while(self.getDistance() >= 8.0):
             time.sleep(0.2)
         for i in range(n):
             total += float(temp_sensor.get_obj_temp())
@@ -34,6 +36,27 @@ class RaspberryController():
                 return 'INTERRUPTED'
             time.sleep(0.5)
         return round(total / n, 2)
+
+    def getDistance(self):
+        trig = 5
+        echo = 6
+
+        time.sleep(0.2)
+        gpio.output(trig, 1)
+        time.sleep(0.00001)
+        gpio.output(trig, 0)
+
+        while gpio.input(echo) == 0:
+            pulse_start = time.time()
+
+        while gpio.input(echo) == 1:
+            pulse_end = time.time()
+
+        pulse_duration = pulse_end - pulse_start
+        distance = pulse_duration * 17000
+        distance = round(distance, 2)
+
+        return distance
 
 # import time
 # from multiprocessing import Value
