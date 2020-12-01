@@ -8,11 +8,9 @@ from mfrc522 import MyMFRC522
 
 class RaspberryController():
     def __init__(self, interrupt):
+        GPIO.setmode(GPIO.BCM)
         self.nfc_reader = MyMFRC522(interrupt)
         self.interrupt = interrupt
-        gpio.setmode(gpio.BCM)
-        gpio.setup(trig, gpio.OUT)
-        gpio.setup(echo, gpio.IN)
 
     def __del__(self):
         GPIO.cleanup()
@@ -40,16 +38,18 @@ class RaspberryController():
     def getDistance(self):
         trig = 5
         echo = 6
+        GPIO.setup(trig, GPIO.OUT)
+        GPIO.setup(echo, GPIO.IN)
 
         time.sleep(0.2)
-        gpio.output(trig, 1)
+        GPIO.output(trig, 1)
         time.sleep(0.00001)
-        gpio.output(trig, 0)
+        GPIO.output(trig, 0)
 
-        while gpio.input(echo) == 0:
+        while GPIO.input(echo) == 0:
             pulse_start = time.time()
 
-        while gpio.input(echo) == 1:
+        while GPIO.input(echo) == 1:
             pulse_end = time.time()
 
         pulse_duration = pulse_end - pulse_start
