@@ -606,7 +606,7 @@ class View(QWidget):
                 return
             else:
                 user_info = item['user_info']
-                self.tempWidget.setName(user_info['name'])
+                self.tempWidget.setName(user_info['NAME'])
                 self.tempWidget.setBelong(user_info['belong'])
                 if(user_info['id'] != None):
                     self.tempWidget.setId(user_info['id'])
