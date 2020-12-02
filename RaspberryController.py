@@ -1,8 +1,8 @@
+# The Project Code ↓↓
 import time
 from multiprocessing import Value
 import MLX90614
 import RPi.GPIO as GPIO
-import Ultra
 from mfrc522 import MyMFRC522
 
 
@@ -58,6 +58,7 @@ class RaspberryController():
 
         return distance
 
+# For Test Code ↓↓
 # import time
 # from multiprocessing import Value
 
