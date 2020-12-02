@@ -160,7 +160,7 @@ class MenuWidget(QGroupBox):
             # btn.resize(300,300)
             btn.setAlignment(Qt.AlignCenter)
             pixmap = QPixmap(
-                f"./resources/img/{menu['menu_image']}").scaled(300, 300)
+                f"./resources/img/{menu['menu_image']}").scaled(260, 260)
             btn.setPixmap(pixmap)
             handler_name = menu['menu_event_name']
             btn.mousePressEvent = lambda ch, handler_name=handler_name: self.eventHandler(
