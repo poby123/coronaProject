@@ -446,7 +446,6 @@ class AdminAddWidget(QGroupBox):
         QGroupBox.__init__(self)
         self.box = QFormLayout()
         self.setLayout(self.box)
-        self.setTitle("멤버 추가")
 
         # define widgets
         self.nfcIdLabel = QLabel('NFC ID : ')
@@ -472,7 +471,7 @@ class AdminAddWidget(QGroupBox):
             lambda: eventHandler('adminAdd_add', self.getElements()))
 
         # define style
-        self.box.setContentsMargins(40, 100, 40, 0)
+        # self.box.setContentsMargins(40, 100, 40, 0)
         labelStyle = "font-size:20px;font-family: 맑은 고딕;"
         statusLabelStyle = labelStyle + "height:30px;"
         editorStyle = "font-size:20px;font-family: 맑은 고딕;"
