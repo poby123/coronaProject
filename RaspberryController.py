@@ -92,9 +92,9 @@ class RaspberryController():
 if __name__ == '__main__':
     v = Value('b', False)
     con = RaspberryController(v)
-    print(con.getgetNFCId)
+    print(con.getNFCId())
     # for i in range(100):
-        # time.sleep(1)
-        # res = con.getTemp()
-        # res = con.getNFCId()
-        # print(res)
+    # time.sleep(1)
+    # res = con.getTemp()
+    # res = con.getNFCId()
+    # print(res)
