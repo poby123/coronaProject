@@ -28,3 +28,6 @@
 ~$ cd ssuCoronaProject_Client
 ~/ssuCoronaProject_Client$ python3 main.py
 ```
+
+## Software Structure
+![설계도](https://user-images.githubusercontent.com/50279318/101590450-c819b780-3a2d-11eb-97af-759155aa3cef.png)
