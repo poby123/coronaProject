@@ -1,4 +1,4 @@
-# ssuCoronaProject_Client (1 spoon)
+# ssuCoronaProject_Client
 ## Dependencies
 ```
 ~$ sudo apt-get update
