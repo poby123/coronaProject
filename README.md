@@ -44,3 +44,4 @@ SPI통신과 일반 setmode의 차이로 2020.12.09 현재, RaspberryController.
 ## Circuit
 ![회로도](https://user-images.githubusercontent.com/50279318/101590586-1464f780-3a2e-11eb-8bcc-bc56e32a3bf1.png)
 ## Frame Modeling
+#spoon 하나 얹고 갑니다 - bfly
