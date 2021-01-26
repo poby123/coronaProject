@@ -47,3 +47,4 @@ SPI통신과 일반 setmode의 차이로 2020.12.09 현재, RaspberryController.
 3D 프린터를 통해서 인쇄할 예정이었으나, 불가능하여 폼보드를 통해서 제작.
 이 때문에 실제 3D 프린터로 인쇄할 때 고려해야 할 크기 등 다른 요소는 생각하지 못했다.
 프로그램은 FUSION360을 사용하였다.
+![image](https://user-images.githubusercontent.com/75717176/105791331-3825d200-5fc9-11eb-98c0-9661461cb950.png)
