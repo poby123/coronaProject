@@ -44,4 +44,6 @@ SPI통신과 일반 setmode의 차이로 2020.12.09 현재, RaspberryController.
 ## Circuit
 ![회로도](https://user-images.githubusercontent.com/50279318/101590586-1464f780-3a2e-11eb-8bcc-bc56e32a3bf1.png)
 ## Frame Modeling
-
+3D 프린터를 통해서 인쇄할 예정이었으나, 불가능하여 폼보드를 통해서 제작.
+이 때문에 실제 3D 프린터로 인쇄할 때 고려해야 할 크기 등 다른 요소는 생각하지 못했다.
+프로그램은 FUSION360을 사용하였다.
