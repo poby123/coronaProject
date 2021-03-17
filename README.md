@@ -1,4 +1,5 @@
 # ssuCoronaProject_Client
+## 라즈베리파이 없이 UI 확인을 위한 브랜치입니다.
 ## Dependencies
 ```
 ~$ sudo apt-get update
