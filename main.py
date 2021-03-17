@@ -1,7 +1,8 @@
 import sys
 import time
+import os
 from gtts import gTTS
-from multiprocessing import Process, Queue, Value
+from multiprocessing import Process, Queue, Value, freeze_support
 from threading import Thread
 from pathlib import Path
 import RaspberryController
@@ -23,17 +24,17 @@ class TTS():
 
     def makeVoice(self, text):
         tts = gTTS(text=text, lang='ko')
-        tts.save("./resources/tts/"+text+".mp3")
+        tts.save(f"{os.getcwd()}\\resources\\tts\\${text}.mp3")
 
     def play(self, text):
-        my_file = Path("./resources/tts/"+text+'.mp3')
+        my_file = Path(f"{os.getcwd()}\\resources\\tts\\{text}.mp3")
 
         if (my_file.is_file() == False):
             print('not exist')
             self.makeVoice(text)
 
         self.filename = text+'.mp3'
-        self.media = QUrl.fromLocalFile('./resources/tts/'+self.filename)
+        self.media = QUrl.fromLocalFile(f"{os.getcwd()}\\resources\\tts\\{self.filename}")
         self.content = QMediaContent(self.media)
         self.player.setMedia(self.content)
         self.player.play()
@@ -123,7 +124,7 @@ class InitialWidget(QGroupBox):
         # define label
         self.label = QLabel()
         self.pixmap = QPixmap(
-            './resources/img/logo_black.png').scaled(400, 400)
+            f"{os.getcwd()}\\resources\\img\\logo_black.png").scaled(400, 400)
         self.label.setPixmap(self.pixmap)
         self.mousePressEvent = lambda e: self.eventHandler('init')
 
@@ -160,7 +161,7 @@ class MenuWidget(QGroupBox):
             # btn.resize(300,300)
             btn.setAlignment(Qt.AlignCenter)
             pixmap = QPixmap(
-                f"./resources/img/{menu['menu_image']}").scaled(260, 260)
+                f"{os.getcwd()}\\resources\\img\\{menu['menu_image']}").scaled(260, 260)
             btn.setPixmap(pixmap)
             handler_name = menu['menu_event_name']
             btn.mousePressEvent = lambda ch, handler_name=handler_name: self.eventHandler(
@@ -223,7 +224,7 @@ class NFCWatingWidget(QGroupBox):
         self.gif_label.setAlignment(Qt.AlignCenter)
 
         # - tagging_movie
-        self.tagging_movie = QMovie('./resources/img/tagging.gif')
+        self.tagging_movie = QMovie(f"{os.getcwd()}\\resources\\img\\tagging.gif")
         self.tagging_movie.setScaledSize(QSize(400, 200))
 
         # - tagging_movie attach to gif label
@@ -851,6 +852,8 @@ def Handler(requestQ, responseQ, interrupt, isReady):
 
 
 if __name__ == "__main__":
+    freeze_support()
+    
     app = QApplication(sys.argv)
 
     requestQ = Queue()
@@ -863,4 +866,4 @@ if __name__ == "__main__":
         requestQ, responseQ, interrupt, isReady), daemon=True)
     background.start()
 
-    exit(app.exec_())
+    sys.exit(app.exec_())
